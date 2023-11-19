@@ -1,0 +1,13 @@
+{
+  "compatibilityLevel": "JAVA_8",
+  "package": "dev.macrohq.meth.mixin",
+  "client": [
+    "MinecraftInvoker",
+    "MixinNetworkManager",
+    "ChunkProviderClientAccessor",
+    "MixinInventoryBasic",
+    "MixinGuiChest",
+    "MixinNetworkManager"
+  ],
+  "verbose": true
+}
