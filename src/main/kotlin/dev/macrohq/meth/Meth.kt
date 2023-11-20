@@ -34,6 +34,7 @@ class Meth {
   lateinit var mobKiller: MobKiller private set
   lateinit var failsafeNew: FailsafeNew private set
   lateinit var infoBarUtil: InfoBarUtil private set
+  lateinit var worldScanner: WorldScanner private set
   lateinit var locationUtil: LocationUtil private set
   lateinit var mithrilMiner: MithrilMiner private set
   lateinit var macroHandler: MacroHandler private set
@@ -57,6 +58,7 @@ class Meth {
     mobKiller = MobKiller()
     infoBarUtil = InfoBarUtil()
     failsafeNew = FailsafeNew()
+    worldScanner = WorldScanner()
     locationUtil = LocationUtil()
     mithrilMiner = MithrilMiner()
     autoInventory = AutoInventory()
@@ -88,7 +90,7 @@ class Meth {
 
     MinecraftForge.EVENT_BUS.register(RouteBuilder)
     MinecraftForge.EVENT_BUS.register(Testing)
-//    CommandManager.register(Set()) // You dont need this punk
+    CommandManager.register(Set()) // You dont need this punk
   }
 
   @SubscribeEvent

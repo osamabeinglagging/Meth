@@ -36,6 +36,8 @@ val pathExec
   get() = meth.pathExec
 val debugHUD
   get() = meth.debugHUD
+val worldScanner
+  get() = meth.worldScanner
 val locationUtil
   get() = meth.locationUtil
 val infoBarUtil

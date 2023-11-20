@@ -8,11 +8,12 @@ import dev.macrohq.meth.feature.RouteBuilder
 import dev.macrohq.meth.util.*
 import dev.macrohq.meth.util.Logger.info
 import dev.macrohq.meth.util.Logger.log
+import net.minecraft.block.BlockStainedGlass
 import net.minecraft.entity.Entity
 import net.minecraft.init.Blocks
+import net.minecraft.item.EnumDyeColor
+import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
-import scala.Mutable
-import java.util.Collections.addAll
 
 @Command(value = "set", aliases = ["pft", "s"])
 class Set {
@@ -25,67 +26,45 @@ class Set {
 
   @Main
   private fun main() {
-//    WebhookUtil.send(
-//      WebhookUtil.statusBody(1698425140, 71, 20, "Kill Tom", 1698425140, 1698425140),
-//      WebhookUtil.WebhookType.GENERAL_INFO
-//    )
-//    RenderUtil.markers.add(player.getStandingOnFloor())
-//    blocks.forEach {
-//      RenderUtil.markers.add(it)
-//    }
-//    info("First: ${blocks.first()}")
-//    RenderUtil.markers.clear()
-//    RenderUtil.markers.addAll(
-//      BlockUtil.neighbourGenerator(player.getStandingOnFloor(), 1)
-//        .filter { world.getBlockState(it).block == Blocks.stained_glass }.toMutableList()
-//    )
-    info("SET")
-    RenderUtil.markers.clear()
-    RenderUtil.markers.add(player.getStandingOnFloor().add(20,0,0))
-    PathingUtil.goto(player.getStandingOnFloor().add(20,0,0))
+    if(worldScanner.enabled){
+      worldScanner.disable()
+    }else{
+      worldScanner.enable()
+    }
   }
 
   @SubCommand
   private fun scan() {
-    runAsync {
-      Logger.info("Scan started")
-      blocks.clear()
-      for (y in 0..256) {
-        for (x in player.chunkCoordX * 16..player.chunkCoordX * 16 + 15) {
-          for (z in player.chunkCoordZ * 16..player.chunkCoordZ * 16 + 15) {
-            val block = BlockPos(x, y, z)
-            if (world.getBlockState(block).block == Blocks.stained_glass) {
-              blocks.add(block)
-            }
-          }
-        }
-      }
-      info("Blocks: ${blocks.size}")
-//      RenderUtil.markers.clear()
-//      RenderUtil.markers.addAll(blocks)
-    }
+    info(world.getBlockState(player.getStandingOnFloor()).getValue(BlockStainedGlass.COLOR))
   }
 
   @SubCommand
   private fun group() {
     runAsync {
+      info("Groupin shit")
       val clusters = mutableListOf<MutableList<BlockPos>>()
-      while(blocks.isNotEmpty()) {
+      while (blocks.isNotEmpty()) {
         val cluster = mutableListOf<BlockPos>()
         generateClusterAndExpand(blocks.first(), cluster, blocks)
         clusters.add(cluster)
       }
+      info("Cluster: ${clusters.size}")
       RenderUtil.markers.clear()
-      clusters.forEach{RenderUtil.markers.addAll(it)}
+      clusters.forEach { RenderUtil.markers.addAll(it) }
     }
   }
 
   private fun neighbors(blockPos: BlockPos): MutableList<BlockPos> {
-    return BlockUtil.neighbourGenerator(blockPos, 1).filter { world.getBlockState(it).block == Blocks.stained_glass && it != blockPos}
+    return BlockUtil.neighbourGenerator(blockPos, 1)
+      .filter { world.getBlockState(it).block == Blocks.stained_glass && it != blockPos }
       .toMutableList()
   }
 
-  private fun generateClusterAndExpand(block: BlockPos, cluster: MutableList<BlockPos>, blocks: MutableList<BlockPos>) {
+  private fun generateClusterAndExpand(
+    block: BlockPos,
+    cluster: MutableList<BlockPos>,
+    blocks: MutableList<BlockPos>
+  ) {
     cluster.add(block)
     blocks.remove(block)
     neighbors(block).apply { removeAll(cluster) }.forEach {
@@ -146,6 +125,7 @@ class Set {
 
   @SubCommand
   private fun clear() {
+    worldScanner.clear()
     movementLogger.disable()
     PathingUtil.stop()
     autoAotv.disable()
