@@ -1,14 +1,14 @@
 [
   {
-    "modid": "examplemod",
-    "name": "ExampleMod",
-    "description": "Exmaple Mod!",
+    "modid": "meth",
+    "name": "Meth",
+    "description": "I love meth!",
     "version": "${version}",
     "mcversion": "1.8.9",
     "url": "",
     "updateUrl": "",
     "authorList": [
-      "TomJuri"
+      "Osama"
     ],
     "credits": "",
     "logoFile": "",
