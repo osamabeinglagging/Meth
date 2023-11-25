@@ -55,8 +55,9 @@ class WorldScanner {
           for (x in (currentChunk.xPosition * 16)..(currentChunk.xPosition * 16) + 15) {
             for (z in (currentChunk.zPosition * 16)..(currentChunk.zPosition * 16) + 15) {
               val block = BlockPos(x, y, z)
-              if ((world.getBlockState(block).block != Blocks.stained_glass && world.getBlockState(block).block != Blocks.stained_glass_pane)
-                || !this.colorInt.contains(world.getBlockState(block).getValue(BlockStainedGlass.COLOR))
+              val state = world.getBlockState(block)
+              if ((state.block != Blocks.stained_glass && state.block != Blocks.stained_glass_pane)
+                || !this.colorInt.contains(state.getValue(BlockStainedGlass.COLOR))
               ) continue
               currentChunkGemstones.add(block)
             }
@@ -76,7 +77,7 @@ class WorldScanner {
           this.foundVeins.getOrPut(chunkCoordinate) { mutableListOf() }.add(
             Vein(
               colorInt[world.getBlockState(currentClusterGemstones.first()).getValue(BlockStainedGlass.COLOR)]!!,
-              findCenterBlockFromCluster(currentClusterGemstones)
+              currentClusterGemstones.first()
             )
           )
         }

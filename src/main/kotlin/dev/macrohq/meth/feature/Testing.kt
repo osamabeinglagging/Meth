@@ -6,6 +6,7 @@ import dev.macrohq.meth.util.mc
 import dev.macrohq.meth.util.player
 import dev.macrohq.meth.util.world
 import net.minecraft.world.chunk.Chunk
+import net.minecraftforge.event.entity.player.ArrowLooseEvent
 import net.minecraftforge.event.world.ChunkEvent
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent
@@ -43,5 +44,10 @@ object Testing {
   fun onChunkLoad(event: ChunkEvent.Load) {
 //        info("RAN")
 //        chunks.add(event.chunk)
+  }
+
+  @SubscribeEvent
+  fun onBow(event: ArrowLooseEvent){
+    info("charge: ${event.charge}")
   }
 }

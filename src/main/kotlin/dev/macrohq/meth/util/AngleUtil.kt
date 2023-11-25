@@ -7,6 +7,7 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.MathHelper
 import net.minecraft.util.Vec3
 import kotlin.math.abs
+import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
@@ -55,5 +56,27 @@ object AngleUtil {
     fun angleDifference(entity: Entity, yawDifference: Float, pitchDifference: Float): Boolean{
         val entityPos = entity.positionVector.addVector(0.0, 0.8, 0.0)
         return abs(getYawChange(entityPos)) < yawDifference && abs(getPitchChange(entityPos)) < pitchDifference
+    }
+
+    fun bowAngle(target: Entity): Rotation{
+        // Skidded from Wurst Client I Legit wasted a lot of time watching videos trying to figure out the equation for
+        // Projectile Velocity with Linear Drag. cant figure it out :sadge:
+        val velocity = 1f
+        val d = player.getPositionEyes(1f).distanceTo(target.positionVector.addVector(.5,1.0,.5))
+        val posX = (target.posX + (target.posX - target.lastTickPosX) * d - player.posX)
+        val posY = (target.posY + (target.posY - target.prevPosY) * d + target.height * 0.5 - player.posY - player.eyeHeight)
+        val posZ = (target.posZ + (target.posZ - target.prevPosZ) * d - player.posZ)
+
+        val hDistance = sqrt(posX * posX + posZ * posZ)
+        val hDistanceSq = hDistance * hDistance
+
+        val g = 0.006f
+
+        val velocitySq: Float = velocity * velocity
+        val velocityPow4 = velocitySq * velocitySq
+
+        val neededYaw = Math.toDegrees(atan2(posZ, posX)).toFloat() - 90
+        val neededPitch = -Math.toDegrees(atan((velocitySq - sqrt(velocityPow4 - g * (g * hDistanceSq + 2 * posY * velocitySq))) / (g * hDistance))).toFloat()
+        return Rotation(neededYaw, neededPitch)
     }
 }
