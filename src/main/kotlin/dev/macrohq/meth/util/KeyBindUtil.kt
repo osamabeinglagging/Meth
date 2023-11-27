@@ -81,6 +81,8 @@ object KeyBindUtil {
     gameSettings.keyBindSprint.setPressed(sprint)
     if(attack){
       this.holdLeftClick()
+    }else{
+      gameSettings.keyBindAttack.setPressed(false)
     }
   }
 }

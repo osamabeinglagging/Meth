@@ -5,10 +5,14 @@ import cc.polyfrost.oneconfig.utils.commands.annotations.Main
 import cc.polyfrost.oneconfig.utils.commands.annotations.SubCommand
 import cc.polyfrost.oneconfig.utils.dsl.runAsync
 import dev.macrohq.meth.feature.RouteBuilder
+import dev.macrohq.meth.feature.RouteData
+import dev.macrohq.meth.feature.helper.RouteNode
+import dev.macrohq.meth.feature.helper.TransportMethod
 import dev.macrohq.meth.util.*
 import dev.macrohq.meth.util.Logger.info
 import dev.macrohq.meth.util.Logger.log
 import net.minecraft.block.BlockStainedGlass
+import net.minecraft.client.renderer.EntityRenderer
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.init.Blocks
@@ -31,42 +35,15 @@ class Set {
 
   @Main
   private fun main() {
-//    if(worldScanner.enabled){
-//      worldScanner.disable()
-//    }else{
-//      worldScanner.enable()
-//    }
-//    player.setAngles()
-//    EntityRenderer
-//    val ar = AutoRotation()
-//    val degrees = ar.pixelsForDegree(1f, 1f)
-//    ar.moveMouse(degrees.first, degrees.second)
-//    val cluster = mutableListOf<BlockPos>()
-//    val blocks = mutableListOf<BlockPos>()
-//    generateClusterAndExpand(RaytracingUtil.getBlockLookingAt(10f)!!, cluster, blocks)
-//    RenderUtil.markers.apply { clear() }.addAll(cluster)
-
-//    val velocity = 20f / 20f
-//    val velocity = (velocity * velocity + velocity * 2) / 3f
-//    if (velocity > 1) velocity = 1
-    val target = world.getLoadedEntityList().apply { sortBy { player.getDistanceToEntity(it) } }.first { it != player && it is EntityLivingBase }
-
-    val velocity = 1f
-    val d = player.getPositionEyes(1f).distanceTo(target.positionVector.addVector(.5,1.0,.5))
-    val posX = (target.posX + (target.posX - target.lastTickPosX) * d - player.posX)
-    val posY = (target.posY + (target.posY - target.prevPosY) * d + target.height * 0.5 - player.posY - player.eyeHeight)
-    val posZ = (target.posZ + (target.posZ - target.prevPosZ) * d - player.posZ)
-
-    val neededYaw = Math.toDegrees(atan2(posZ, posX)).toFloat() - 90
-    player.rotationYaw = neededYaw
-
-    val hDistance = sqrt(posX * posX + posZ * posZ)
-    val hDistanceSq = hDistance * hDistance
-    val g = 0.006f
-    val velocitySq: Float = velocity * velocity
-    val velocityPow4 = velocitySq * velocitySq
-    val neededPitch = -Math.toDegrees(atan((velocitySq - sqrt(velocityPow4 - g * (g * hDistanceSq + 2 * posY * velocitySq))) / (g * hDistance))).toFloat()
-    player.rotationPitch = neededPitch
+    val LAVA_ETHERWARPLESS = listOf(
+      RouteNode(BlockPos(4, 160, -43)),
+      RouteNode(BlockPos(9, 175, -12)),
+      RouteNode(BlockPos(27, 206, -13)),
+      RouteNode(BlockPos(54, 218, -12)),
+      RouteNode(BlockPos(55, 226, -32)),
+      RouteNode(BlockPos(56, 222, -30), TransportMethod.WALK),
+    )
+    autoAotv.enable(LAVA_ETHERWARPLESS)
   }
 
   @SubCommand
@@ -121,7 +98,7 @@ class Set {
           val block = blockPos.add(x, y, z)
           if (world.getBlockState(block).block != Blocks.stained_glass && world.getBlockState(block).block != Blocks.stained_glass_pane) continue
           if (world.getBlockState(block).getValue(BlockStainedGlass.COLOR) != parentColor) continue
-          if(x == 0 && z == 0 && y == 1) neighbours.add(0, block)
+          if (x == 0 && z == 0 && y == 1) neighbours.add(0, block)
           neighbours.add(block)
         }
       }
@@ -142,8 +119,8 @@ class Set {
 
 //    neighbors(block).apply { removeAll(cluster) }.forEach {
 //    if(neighbors(block).size == 0) return
-    if(neighbors.size == 0) return
-      generateClusterAndExpand(neighbors(block).first(), cluster, blocks)
+    if (neighbors.size == 0) return
+    generateClusterAndExpand(neighbors(block).first(), cluster, blocks)
 //    }
   }
 

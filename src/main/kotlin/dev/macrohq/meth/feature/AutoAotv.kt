@@ -1,8 +1,9 @@
 package dev.macrohq.meth.feature
 
+import dev.macrohq.meth.feature.helper.RouteNode
+import dev.macrohq.meth.feature.helper.TransportMethod
 import dev.macrohq.meth.util.*
 import dev.macrohq.meth.util.Logger.log
-import net.minecraft.util.BlockPos
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent
 
@@ -12,39 +13,55 @@ class AutoAotv {
   private var succeeded = false
   private var state = State.STARTING
   private var timer = Timer(0)
-  private var nextBlock: BlockPos? = null
+  private var currentNodeIndex = 0
+  private var nextNode: RouteNode? = null
   private var timeLimit = Timer(0)
-  private var route = mutableListOf<BlockPos>()
+  private var route = mutableListOf<RouteNode>()
 
   enum class State {
-    STARTING, FINDING_NEXT_BLOCK, LOOKING_AT_NEXT_BLOCK, LOOK_VERIFY, USING_AOTV, AOTV_VERIFY, WALK_TO_END, FINAL_BLOCK_VERIFY
+    STARTING, FINDING_NEXT_BLOCK, LOOKING_AT_NEXT_BLOCK, LOOK_VERIFY, AOTV_OR_ETHERWARP, AOTV_OR_ETHERWARP_VERIFY, WALK, WALK_VERIFY, END_VERIFY
   }
 
-  fun enable(route: List<BlockPos>) {
+  fun enable(route: List<RouteNode>) {
     this.enabled = true
     this.failed = false
-    this.nextBlock = null
+    this.nextNode = null
     this.succeeded = false
-    this.state = State.STARTING
     this.timer = Timer(0)
+    this.state = State.STARTING
     this.route = route.toMutableList()
     this.timeLimit = Timer(config.autoAotvTimeLimit)
 
     log("Enabling Auto Aotv Macro")
-//    info("Enabling Auto Aotv Macro.")
   }
 
   fun disable() {
     if (!this.enabled) return
 
     this.enabled = false
-    this.nextBlock = null
+    this.nextNode = null
+    this.currentNodeIndex = 0
     this.state = State.STARTING
     this.timer = Timer(0)
     this.timeLimit = Timer(0)
+    KeyBindUtil.releaseSneak()
 
     log("Disabling Auto Aotv Macro")
-//    info("Disabling Auto Aotv Macro.")
+  }
+
+  private fun getTime(node: RouteNode): Int {
+    var time = config.autoAotvFlyLookTime
+    if(node.transportMethod == TransportMethod.ETHERWARP && player.onGround){
+      time = config.autoAotvEtherwarpLookTime
+    }
+    return time
+  }
+
+  private fun setFailed(failed: Boolean = true) {
+    // Failed = true == Task Failed
+    // Failed = False == Task Succeeded
+    this.failed = failed
+    this.succeeded = !failed
   }
 
   fun succeeded() = !enabled && succeeded
@@ -53,117 +70,164 @@ class AutoAotv {
   @SubscribeEvent
   fun onTick(event: ClientTickEvent) {
     if (player == null || world == null || !this.enabled) return
+  println("inOnTick")
 
     if (this.timeLimit.isDone) {
+      println("TimeLimit")
+      log("[AutoAotv] - TimeLimit Ended")
       this.disable();
-      this.succeeded = false; this.failed = true
+      this.setFailed()
       return
     }
 
     when (this.state) {
+
       State.STARTING -> {
-        InventoryUtil.holdItem(CommUtil.getAOT())
         this.state = State.FINDING_NEXT_BLOCK
+        // Should Check if HotBar Swap Macro Check is Enabled or not and then swap
+        InventoryUtil.holdItem(CommUtil.getAOT())
       }
 
       State.FINDING_NEXT_BLOCK -> {
-        this.nextBlock = if (this.nextBlock != null) this.route[this.route.indexOf(nextBlock) + 1] else this.route[0]
-        this.state = State.LOOKING_AT_NEXT_BLOCK
-
-        if (this.nextBlock == this.route.last() && config.commTransport == 0) {
-          this.state = State.WALK_TO_END
-          this.timer = Timer(200)
+        if (this.currentNodeIndex == this.route.size) {
+          this.state = State.END_VERIFY
+          return
         }
 
-        log("AutoAotv - Finding Next Block")
+        this.state = State.LOOKING_AT_NEXT_BLOCK
+        this.nextNode = this.route[currentNodeIndex]
+        this.currentNodeIndex++
+
+        if(this.nextNode!!.transportMethod == TransportMethod.WALK){
+          this.state = State.WALK
+        }
+
+        log("[AutoAotv] - Finding Next Block")
       }
 
       State.LOOKING_AT_NEXT_BLOCK -> {
-        val time = if (player.onGround && !world.isAirBlock(this.nextBlock!!)) config.autoAotvEtherwarpLookTime
-        else config.autoAotvFlyLookTime
-        RotationUtil.lock(this.nextBlock!!, time, true)
         this.state = State.LOOK_VERIFY
+        val time = this.getTime(this.nextNode!!)
+        RotationUtil.lock(this.nextNode!!.block, time, true)
 
-        log("AutoAotv - Looking at Next Block. Time: ${time}")
+        log("[AutoAotv] - Looking at Next Block. Time: $time")
       }
 
       State.LOOK_VERIFY -> {
-        if (!AngleUtil.angleDifference(this.nextBlock!!, 1f, 1f)) return
-        this.state = State.USING_AOTV
+        if (!AngleUtil.angleDifference(this.nextNode!!.block, 1f, 1f)) return
+        this.state = State.AOTV_OR_ETHERWARP
 
-        if (!world.isAirBlock(this.nextBlock) && config.commTransport != 0) {
-          this.timer = Timer(config.autoAotvEtherwarpSneakTime)
-          KeyBindUtil.holdSneak()
+        val transportMethod = this.nextNode!!.transportMethod
+
+        when (transportMethod) {
+          TransportMethod.FLY -> {
+            this.state = State.AOTV_OR_ETHERWARP
+          }
+
+          TransportMethod.ETHERWARP -> {
+            KeyBindUtil.holdSneak()
+            this.state = State.AOTV_OR_ETHERWARP
+            this.timer = Timer(config.autoAotvEtherwarpSneakTime)
+          }
+
+          TransportMethod.WALK -> {
+            this.state = State.WALK
+          }
         }
 
-        log("AutoAotv - Verifying if looking at next block.")
+        log("[AutoAotv] - Verifying if looking at next block.")
       }
 
-      State.USING_AOTV -> {
+      State.AOTV_OR_ETHERWARP -> {
         if (!this.timer.isDone) return
 
         KeyBindUtil.rightClick()
         RotationUtil.stop()
 
         this.timer = Timer(config.autoAotvTeleportTimeLimit)
-        this.state = State.AOTV_VERIFY
+        this.state = State.AOTV_OR_ETHERWARP_VERIFY
 
-        log("AutoAotv - Using Aotv.")
+        log("[AutoAotv] - Using Aotv.")
       }
 
-      State.AOTV_VERIFY -> {
-        if (timer.isDone) {
-          this.succeeded = false; this.failed = true
-          this.disable(); return
+      State.AOTV_OR_ETHERWARP_VERIFY -> {
+        if (this.timer.isDone) {
+          this.setFailed()
+          println("Verify")
+          this.disable();
+          println("Disable Called From AOTV_OR_ETHERWARP_VERIFY")
+          return
         }
 
-        if (player.distanceToBlock(player.lastTickPositionCeil()) > 4
-          || player.getStandingOnFloor() == this.nextBlock!!
-          || player.distanceToBlock(nextBlock!!) < 3
-        ) {
-          this.timer = Timer(0)
-          KeyBindUtil.releaseSneak()
+        val playerDistanceTraveledFromLastTick = player.distanceToBlock(player.lastTickPositionCeil())
+        val playerStandingOnNextNode = player.getStandingOnFloor() == this.nextNode!!.block
+        val playerDistanceToNextBlock = player.distanceToBlock(nextNode!!.block)
+        val shouldCrashIntoNextBlock = !world.isAirBlock(this.nextNode!!.block)
+            && this.nextNode!!.transportMethod == TransportMethod.FLY
 
-          val dist = if (config.autoAotvAOT == 0) 5 else 7
+        if (playerDistanceTraveledFromLastTick < 4 && !playerStandingOnNextNode && playerDistanceToNextBlock > 3) return
 
-          this.state = if (player.distanceToBlock(this.nextBlock!!) > dist) {
-            State.LOOKING_AT_NEXT_BLOCK
-          } else if (this.nextBlock == this.route.last()
-            && player.distanceToBlock(this.nextBlock!!) < 1
-          ) State.FINAL_BLOCK_VERIFY
-          else State.FINDING_NEXT_BLOCK
+        this.timer = Timer(0)
+        KeyBindUtil.releaseSneak()
+
+        if (playerDistanceToNextBlock > 7 || (shouldCrashIntoNextBlock && !player.onGround)) {
+          this.state = State.LOOKING_AT_NEXT_BLOCK
+        } else {
+          this.state = State.FINDING_NEXT_BLOCK
         }
 
-        log("AutoAotv - Verifying Aotv.")
+        log("[AutoAotv] - Verifying Aotv.")
       }
 
-      State.WALK_TO_END -> {
+      State.WALK -> {
         if (!(player.onGround && timer.isDone)) return
 
-        PathingUtil.goto(this.nextBlock!!)
+        PathingUtil.goto(this.nextNode!!.block)
+        this.state = State.WALK_VERIFY
         this.timer = Timer(config.autoAotvWalkTimeLimit)
-        this.state = State.FINAL_BLOCK_VERIFY
 
-        log("AutoAotv - Walking to end.")
+        log("[AutoAotv] - Walking to end.")
       }
 
-      State.FINAL_BLOCK_VERIFY -> {
-        if ((PathingUtil.hasFailed || this.timer.isDone) && config.commTransport == 0) {
+      State.WALK_VERIFY -> {
+        if (PathingUtil.hasFailed || this.timer.isDone) {
           PathingUtil.stop(); RotationUtil.stop()
-          this.failed = true; this.succeeded = false
-          this.disable(); return
+          this.setFailed()
+          println("Walk Failed")
+          this.disable()
+          return
         }
 
-        if ((player.distanceToBlock(this.nextBlock!!) < 1 && player.onGround) ||
-          (PathingUtil.isDone && config.commTransport == 0)) {
-          PathingUtil.stop(); RotationUtil.stop()
-          this.succeeded = true; this.failed = false
-          this.disable();
+        val playerDistanceToNextNode = player.distanceToBlock(this.nextNode!!.block)
 
-          log("AutoAotv - Done Aotv'ing")
+        if (playerDistanceToNextNode < 1 && player.onGround || PathingUtil.isDone) {
+          PathingUtil.stop(); RotationUtil.stop()
+          this.state = State.FINDING_NEXT_BLOCK
+
+          log("[AutoAotv] - Done Walking.")
+        }
+      }
+
+      State.END_VERIFY -> {
+        if (this.timer.isDone) {
+          this.setFailed()
+          println("End Verify Failed")
+          this.disable()
+          return
         }
 
-        log("AutoAotv - Verifying final block.")
+        log("[AutoAotv] - Verifying final block.")
+
+        val playerDistanceToNextNode = player.distanceToBlock(this.nextNode!!.block)
+        val playerStandingOnFinalNode = player.getStandingOnFloor() == this.route.last().block
+
+        if (playerDistanceToNextNode > 1 && !playerStandingOnFinalNode) return
+
+        this.setFailed(false)
+        this.disable()
+
+        log("[AutoAotv] - Done Aotv'ing")
+
       }
     }
   }

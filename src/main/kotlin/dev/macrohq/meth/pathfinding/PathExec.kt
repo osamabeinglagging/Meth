@@ -36,13 +36,6 @@ class PathExec {
     }
 
     val movement = MovementHelper.closestKeysetsToBlock(next!!)
-    RenderUtil.points.clear()
-    val points = MovementHelper.allPoints()
-    val blk = Vec3(next!!).addVector(.5, 0.0, .5)
-    RenderUtil.points.add(points.minBy {
-      sqrt((it.xCoord - blk.xCoord).pow(2.0) + (it.zCoord - blk.zCoord).pow(2.0))
-    })
-
     KeyBindUtil.movement(movement[0], movement[1], movement[2], movement[3])
     gameSettings.keyBindSprint.setPressed(true)
     gameSettings.keyBindJump.setPressed(shouldJump())
@@ -52,7 +45,6 @@ class PathExec {
     disable()
     route = path.toMutableList()
     enabled = true
-    log("here")
   }
 
   fun disable() {

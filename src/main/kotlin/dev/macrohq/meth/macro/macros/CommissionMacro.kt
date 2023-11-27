@@ -155,7 +155,7 @@ class CommissionMacro : Macro() {
 
       State.TRANSPORTING -> {
         val routeToChoose = if (this.aotvFailure < 3) config.commTransport else 2
-        autoAotv.enable(RouteData.getRoute(this.currentCommission, routeToChoose))
+//        autoAotv.enable(RouteData.getRoute(this.currentCommission, routeToChoose))
         this.state = State.TRANSPORTING_VERIFY
 
         log("CommissionMacro - Starting Transport.")

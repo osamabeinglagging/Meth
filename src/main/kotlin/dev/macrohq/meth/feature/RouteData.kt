@@ -1,11 +1,21 @@
 package dev.macrohq.meth.feature
 
+import dev.macrohq.meth.feature.helper.RouteNode
+import dev.macrohq.meth.feature.helper.TransportMethod
 import dev.macrohq.meth.macro.macros.CommissionMacro.CommissionType
 import dev.macrohq.meth.macro.macros.CommissionMacro.CommissionType.*
 import dev.macrohq.meth.util.config
 import net.minecraft.util.BlockPos
 
 object RouteData {
+
+  val TEST = listOf(
+    RouteNode(BlockPos(4, 160, -43)),
+    RouteNode(BlockPos(9, 175, -12)),
+    RouteNode(BlockPos(27, 206, -13)),
+    RouteNode(BlockPos(54, 218, -12)),
+    RouteNode(BlockPos(56, 222, -30), TransportMethod.ETHERWARP)
+  )
 
   private val CEANNA_AOTV = listOf(
     BlockPos(7, 158, -23), BlockPos(44, 146, 18), BlockPos(43, 134, 21)
@@ -94,12 +104,12 @@ object RouteData {
   )
   private val ROYAL_ETHERWARPLESS = listOf(
     BlockPos(6, 154, -21),
-		BlockPos(56, 139, 35),
-		BlockPos(112, 156, 42),
-		BlockPos(131, 161, 61),
-		BlockPos(164, 170, 33),
-		BlockPos(163, 161, 21),
-		BlockPos(164, 161, 18),
+    BlockPos(56, 139, 35),
+    BlockPos(112, 156, 42),
+    BlockPos(131, 161, 61),
+    BlockPos(164, 170, 33),
+    BlockPos(163, 161, 21),
+    BlockPos(164, 161, 18),
   )
 
   private val UPPER_AOTV = listOf(
@@ -120,11 +130,11 @@ object RouteData {
   )
   private val UPPER_ETHERWARPLESS = listOf(
     BlockPos(-10, 160, -23),
-		BlockPos(-56, 184, -29),
-		BlockPos(-63, 165, -38),
-		BlockPos(-91, 162, -53),
-		BlockPos(-111, 170, -69),
-		BlockPos(-111, 166, -74),
+    BlockPos(-56, 184, -29),
+    BlockPos(-63, 165, -38),
+    BlockPos(-91, 162, -53),
+    BlockPos(-111, 170, -69),
+    BlockPos(-111, 166, -74),
   )
 
   private val ICE_AOTV = listOf(
@@ -143,11 +153,11 @@ object RouteData {
   )
   private val ICE_ETHERWARPLESS = listOf(
     BlockPos(-8, 166, -25),
-		BlockPos(-5, 193, 34),
-		BlockPos(0, 130, 128),
-		BlockPos(0, 130, 141),
-		BlockPos(-2, 138, 177),
-		BlockPos(-1, 133, 177),
+    BlockPos(-5, 193, 34),
+    BlockPos(0, 130, 128),
+    BlockPos(0, 130, 141),
+    BlockPos(-2, 138, 177),
+    BlockPos(-1, 133, 177),
   )
 
   private val GOBLIN_AOTV = listOf(
@@ -170,12 +180,12 @@ object RouteData {
   )
   private val GOBLIN_ETHERWARPLESS = listOf(
     BlockPos(-8, 166, -25),
-		BlockPos(-5, 193, 34),
-		BlockPos(0, 130, 128),
-		BlockPos(0, 130, 155),
-		BlockPos(-46, 167, 155),
-		BlockPos(-65, 155, 148),
-		BlockPos(-67, 154, 149),
+    BlockPos(-5, 193, 34),
+    BlockPos(0, 130, 128),
+    BlockPos(0, 130, 155),
+    BlockPos(-46, 167, 155),
+    BlockPos(-65, 155, 148),
+    BlockPos(-67, 154, 149),
   )
 
   fun getRoute(comm: CommissionType, fly: Int = config.commTransport): List<BlockPos> {
