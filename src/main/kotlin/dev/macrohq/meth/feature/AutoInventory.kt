@@ -22,7 +22,8 @@ class AutoInventory {
   private var miningSpeedBoost = 0
   private var speedAndBoostState = SpeedAndBoostState.STARTING
 
-  private var success = false
+  private var failed = false
+  private var succeeded = false
   private var forceEnable = false
 
   private var mainState = MainStates.NONE
@@ -36,12 +37,13 @@ class AutoInventory {
   }
 
   enum class SpeedAndBoostState {
-    STARTING, OPEN_MENU, GET_SPEED, OPEN_TREE, GET_SPEED_BOOST_MULTIPLIER
+    STARTING, GET_SPEED, GET_SPEED_BOOST_MULTIPLIER
   }
 
   fun sendItemsToHotbar(items: MutableList<String>, force: Boolean = false) {
     this.enabled = true
-    this.success = false
+    this.succeeded = false
+    this.failed = false
     this.forceEnable = force
     this.timer = Timer(1000)
     this.mainState = MainStates.ITEMS_TO_HOTBAR
@@ -54,22 +56,28 @@ class AutoInventory {
     }
     items.removeAll(this.elementsToSwap)
     this.availableSlots = InventoryUtil.availableHotbarSlotIndex(items)
+
+    log("[AutoInventory] - Sending Items to Hotbar")
   }
 
   fun disable() {
     if (!this.enabled) return
 
     this.enabled = false
+    this.failed = false
     this.elementsToSwap.clear()
     this.mainState = MainStates.NONE
     this.timeLimit = Timer(0)
     this.itemsToHotbarState = ItemsToHotbarState.STARTING
     this.speedAndBoostState = SpeedAndBoostState.STARTING
+
+    log("[AutoInventory] - Disabling AutoInventory.")
   }
 
   fun getSpeedAndBoost(forceEnable: Boolean = false) {
     this.enabled = true
-    this.success = false
+    this.succeeded = false
+    this.failed = false
     this.miningSpeed = 0
     this.miningSpeedBoost = 0
     this.forceEnable = forceEnable
@@ -77,26 +85,39 @@ class AutoInventory {
     this.mainState = MainStates.SPEED_AND_BOOST
     this.timeLimit = Timer(config.autoInventoryTimeLimit)
     this.speedAndBoostState = SpeedAndBoostState.STARTING
+
+    log("[AutoInventory] - Getting Speed And Boost")
   }
 
   fun getSpeedBoost() = Pair(miningSpeed, miningSpeedBoost)
-  fun succeeded(): Boolean = !enabled && success
-  fun failed(): Boolean = !enabled && !success
+
+  fun setFailed(failed: Boolean = false) {
+    this.failed = failed
+    this.succeeded = !failed
+  }
+
+  fun failed(): Boolean = !this.enabled && this.failed
+  fun succeeded(): Boolean = !this.enabled && this.succeeded
 
   @SubscribeEvent
   fun onTick(event: ClientTickEvent) {
-    if (player == null || world == null || !this.enabled || event.phase == TickEvent.Phase.END
-      || !(failsafe.failsafeAllowance || this.forceEnable)
-    ) return
-    log("AutoInventory")
+    if(player == null || world == null || !this.enabled) return
+    if (!failsafe.failsafeAllowance && !forceEnable) {
+      this.disable()
+      return
+    }
+
     if (this.timeLimit.isDone) {
-      this.success = false
-      this.disable(); return
+      this.setFailed()
+      this.disable()
+      return
     }
 
     // Move Items to Hotbar
     if (this.mainState == MainStates.ITEMS_TO_HOTBAR) {
+
       when (this.itemsToHotbarState) {
+
         ItemsToHotbarState.STARTING -> {
           InventoryUtil.openInventory()
 
@@ -108,12 +129,13 @@ class AutoInventory {
 
         ItemsToHotbarState.SWAP_SLOTS -> {
           if (!this.timer.isDone) return
+
           InventoryUtil.sendItemToHotbarSlot(this.elementsToSwap[0], this.availableSlots[0])
 
           this.elementsToSwap.removeAt(0)
           this.availableSlots.removeAt(0)
-          this.timer = Timer(config.autoInventoryClickTime)
 
+          this.timer = Timer(config.autoInventoryClickTime)
           if (this.elementsToSwap.isEmpty() || this.availableSlots.isEmpty()) {
             this.itemsToHotbarState = ItemsToHotbarState.CLOSE_INVENTORY
           }
@@ -122,7 +144,7 @@ class AutoInventory {
         ItemsToHotbarState.CLOSE_INVENTORY -> {
           InventoryUtil.closeGUI()
 
-          this.success = this.elementsToSwap.isEmpty()
+          this.setFailed(this.elementsToSwap.isNotEmpty())
           this.disable()
         }
       }
@@ -134,23 +156,25 @@ class AutoInventory {
 
       when (this.speedAndBoostState) {
         SpeedAndBoostState.STARTING -> {
-          if (this.miningSpeed == 0) {
-            this.speedAndBoostState = SpeedAndBoostState.OPEN_MENU
-            this.timer = Timer(config.autoInventoryClickTime)
-          } else if (this.miningSpeedBoost == 0) {
-            this.speedAndBoostState = SpeedAndBoostState.OPEN_TREE
-            this.timer = Timer(config.autoInventoryClickTime)
-          } else {
-            this.success = true
-            this.disable()
+          if (!this.timer.isDone) return
+
+          when {
+            this.miningSpeed == 0 -> {
+              player.sendChatMessage("/sbmenu")
+              this.speedAndBoostState = SpeedAndBoostState.GET_SPEED
+            }
+
+            this.miningSpeedBoost == 0 -> {
+              player.sendChatMessage("/hotm")
+              this.speedAndBoostState = SpeedAndBoostState.GET_SPEED_BOOST_MULTIPLIER
+            }
+
+            else -> {
+              this.succeeded = true
+              this.disable()
+              return
+            }
           }
-        }
-
-        SpeedAndBoostState.OPEN_MENU -> {
-          if (!timer.isDone) return
-
-          player.sendChatMessage("/sbmenu")
-          this.speedAndBoostState = SpeedAndBoostState.GET_SPEED
           this.timer = Timer((config.autoInventoryInGUITime) + ping.serverPing)
         }
 
@@ -160,7 +184,7 @@ class AutoInventory {
           this.speedAndBoostState = SpeedAndBoostState.STARTING
           if (player.openContainer !is ContainerChest || InventoryUtil.getIndexInGUI("SkyBlock Profile") == -1) {
             this.disable()
-            this.success = false
+            this.succeeded = false
 
             Logger.error("AutoInventory - Could not open SkyBlock Menu. Disabling")
             return
@@ -172,21 +196,13 @@ class AutoInventory {
           log("AutoInventory - Mining Speed: ${this.miningSpeed}")
         }
 
-        SpeedAndBoostState.OPEN_TREE -> {
-          if (!this.timer.isDone) return
-
-          player.sendChatMessage("/hotm")
-          this.speedAndBoostState = SpeedAndBoostState.GET_SPEED_BOOST_MULTIPLIER
-          this.timer = Timer((config.autoInventoryInGUITime) + ping.serverPing)
-        }
-
         SpeedAndBoostState.GET_SPEED_BOOST_MULTIPLIER -> {
           if (!this.timer.isDone) return
 
           this.speedAndBoostState = SpeedAndBoostState.STARTING
           if (player.openContainer !is ContainerChest && InventoryUtil.getIndexInGUI("Mining Speed Boost") == -1) {
             this.disable()
-            this.success = false
+            this.succeeded = false
 
             Logger.error("AutoInventory - Could not open HOTM Tree. Disabling")
             return

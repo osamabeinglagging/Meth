@@ -35,15 +35,19 @@ class Set {
 
   @Main
   private fun main() {
-    val LAVA_ETHERWARPLESS = listOf(
-      RouteNode(BlockPos(4, 160, -43)),
-      RouteNode(BlockPos(9, 175, -12)),
-      RouteNode(BlockPos(27, 206, -13)),
-      RouteNode(BlockPos(54, 218, -12)),
-      RouteNode(BlockPos(55, 226, -32)),
-      RouteNode(BlockPos(56, 222, -30), TransportMethod.WALK),
-    )
-    autoAotv.enable(LAVA_ETHERWARPLESS)
+//    val LAVA_ETHERWARPLESS = listOf(
+//      RouteNode(BlockPos(4, 160, -43)),
+//      RouteNode(BlockPos(9, 175, -12)),
+//      RouteNode(BlockPos(27, 206, -13)),
+//      RouteNode(BlockPos(54, 218, -12)),
+//      RouteNode(BlockPos(55, 226, -32)),
+//      RouteNode(BlockPos(56, 222, -30), TransportMethod.WALK),
+//    )
+//    autoAotv.enable(LAVA_ETHERWARPLESS)
+//    autoInventory.getSpeedAndBoost(true)
+//    autoInventory.sendItemsToHotbar(mutableListOf("Gemstone Gauntlet"), true)
+//    autoWarp.enable(subLocation = LocationUtil.SubLocation.The_Forge, force = true)
+    mithrilMiner.enable(forceEnable = true)
   }
 
   @SubCommand

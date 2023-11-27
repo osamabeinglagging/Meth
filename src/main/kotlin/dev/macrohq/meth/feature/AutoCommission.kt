@@ -45,6 +45,11 @@ class AutoCommission {
     log("Auto Commission Claim Disabled")
   }
 
+  private fun setFailed(failed: Boolean = false) {
+    this.failed = failed
+    this.succeeded = !failed
+  }
+
   fun succeeded() = !enabled && succeeded
   fun failed() = !enabled && failed
 
@@ -53,13 +58,14 @@ class AutoCommission {
     if (player == null || world == null || !this.enabled || !failsafe.failsafeAllowance) return
 
     if (this.timeLimit.isDone) {
+      log("[AutoCommission] - TimeLimit Ended.")
       this.disable()
-      this.succeeded = false; this.failed = true;
+      this.setFailed()
       return
     }
 
     if (this.claimFailure > 2) {
-      error("AutoCommission - Failed to Find Commission.")
+      error("[AutoCommission] - Failed to Find Commission.")
       this.disable()
       return
     }
@@ -67,18 +73,23 @@ class AutoCommission {
     when (this.state) {
       State.STARTING -> {
         this.state = State.LOOKING
-        if (config.commUsePigeon) {
-          InventoryUtil.holdItem("Royal Pigeon")
-        } else {
-          InventoryUtil.holdItem(CommUtil.getTool())
-        }
+        var itemToHold = CommUtil.getTool()
 
         if (config.commUsePigeon) {
-          this.state = State.OPENING_GUI
           this.timer = Timer(300)
+          this.state = State.OPENING_GUI
+          itemToHold = "Royal Pigeon"
         }
 
-        log("AutoCommission - Starting AutoCommission Claim")
+        if(!InventoryUtil.holdItem(itemToHold)){
+          this.setFailed()
+          this.disable()
+
+          log("[AutoCommission] - Cannot find item to hold.")
+          return
+        }
+
+        log("[AutoCommission] - Starting AutoCommission Claim")
       }
 
       State.LOOKING -> {
@@ -89,13 +100,11 @@ class AutoCommission {
       }
 
       State.LOOKING_VERIFY -> {
-        if (AngleUtil.angleDifference(CommUtil.getCeanna(), 2f, 2f)) {
-          if (config.commUsePigeon) InventoryUtil.holdItem("Royal Pigeon")
+        if (!AngleUtil.angleDifference(CommUtil.getCeanna(), 2f, 2f)) return
 
-          RotationUtil.stop()
-          this.timer = Timer(300)
-          this.state = State.OPENING_GUI
-        }
+        RotationUtil.stop()
+        this.timer = Timer(300)
+        this.state = State.OPENING_GUI
 
         log("AutoCommission - Look verify at Ceanna")
       }
@@ -108,8 +117,6 @@ class AutoCommission {
         } else {
           mc.playerController.interactWithEntitySendPacket(player, CommUtil.getCeanna())
         }
-
-        if (config.commHoldTool) { InventoryUtil.holdItem(CommUtil.getTool()) }
 
         this.state = State.GUI_VERIFY
         this.timer = Timer(config.autoCommissionInGUITime)
@@ -140,7 +147,7 @@ class AutoCommission {
         if (comm == -1) {
           log("AutoCommission - Could not find Commission");
           this.claimFailure++
-          this.timer = Timer(config.autoCommissionClickTime)
+          this.timer = Timer(config.autoCommissionInGUITime)
           this.state = State.GUI_VERIFY
           return
         }
@@ -157,7 +164,7 @@ class AutoCommission {
         if (!this.timer.isDone) return
 
         InventoryUtil.closeGUI()
-        this.succeeded = true
+        this.setFailed(false)
         this.disable()
 
         log("AutoCommission - Finishing AutoCommission.")

@@ -71,10 +71,6 @@ class MethConfig : Config(Mod("Meth", ModType.UTIL_QOL), "meth.json") {
   )
   var commUsePigeon = false
 
-  @Switch(
-    name = "Hold Mining Tool", category = "Commission Macro"
-  )
-  var commHoldTool = true
 
   @Switch(
     name = "Status HUD", category = "Commission Macro"
@@ -131,7 +127,7 @@ class MethConfig : Config(Mod("Meth", ModType.UTIL_QOL), "meth.json") {
   var mobKillerMobLookTime = 500
 
   @Slider(
-    name = "Attack Delay", category = "MobKiller", subcategory = "Time",
+    name = "Attack Delay", category = "Mob Killer", subcategory = "Time",
     min = 100f, max = 1000f, step = 50
   )
   var mobKillerWaitAfterAttackTime = 100
@@ -300,6 +296,5 @@ class MethConfig : Config(Mod("Meth", ModType.UTIL_QOL), "meth.json") {
     initialize()
     this.registerKeyBind(macroToggleKeybind) { macroHandler.toggle() }
     this.addDependency("commAOT", "Aspect of the") { commTransport == 0 }
-    this.addDependency("commHoldTool", "commUsePigeon")
   }
 }

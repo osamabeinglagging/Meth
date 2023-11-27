@@ -48,8 +48,6 @@ val autoWarp
   get() = meth.autoWarp
 val autoInventory
   get() = meth.autoInventory
-val oldFailsafe
-  get() = meth.failsafe
 val macroHandler
   get() = meth.macroHandler
 val ping

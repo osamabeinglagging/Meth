@@ -14,6 +14,8 @@ class MithrilMiner {
   private var enabled = false
   private var miningSpeed = 0
   private var miningTicks = 0
+  private var succeeded = false
+  private var forceEnable = false
   private var noMithrilTimer = 0
   private var miningSpeedBoost = 0
   private var titaniumPriority = false
@@ -28,14 +30,15 @@ class MithrilMiner {
     STARTING, GET_SPEED_AND_BOOST, SPEED_AND_BOOST_VERIFY, HANDLE_MSB, CHECKING, LOOKING, LOOKING_VERIFY, BREAKING, BREAKING_VERIFY
   }
 
-  fun enable(miningSpeed: Int = 0, miningSpeedBoost: Int = 0, titaniumPriority: Boolean = false) {
+  fun enable(miningSpeed: Int = 0, miningSpeedBoost: Int = 0, titaniumPriority: Boolean = false, forceEnable: Boolean = false) {
     this.enabled = true
     this.failed = false
+    this.forceEnable = forceEnable
     this.miningSpeed = miningSpeed
     this.miningSpeedBoost = miningSpeedBoost
     this.titaniumPriority = titaniumPriority
 
-    log("Mithril Miner Enabled.")
+    log("[Mithril Miner] - Enabled.")
   }
 
   fun disable() {
@@ -44,6 +47,7 @@ class MithrilMiner {
     this.enabled = false
     this.miningSpeed = 0
     this.miningSpeedBoost = 0
+    this.forceEnable = false
     this.state = State.STARTING
     KeyBindUtil.releaseLeftClick()
     this.titaniumPriority = false
@@ -52,21 +56,35 @@ class MithrilMiner {
     this.pointOnBlock = null
     this.currentBlock = null
 
-    log("Mithril Miner Disabled.")
+    log("[Mithril Miner] - Disabled.")
   }
 
-  fun succeeded() = !this.enabled && !this.failed
+  private fun setFailed(failed: Boolean = false) {
+    this.failed = failed
+    this.succeeded = !failed
+  }
+
+  fun succeeded() = !this.enabled && this.succeeded
   fun failed() = !this.enabled && this.failed
 
   @SubscribeEvent
   fun onTick(event: ClientTickEvent) {
     if (player == null || world == null || !this.enabled || !failsafe.failsafeAllowance) return
+    if(!failsafe.failsafeAllowance && !this.forceEnable){
+      this.setFailed()
+      this.disable()
+
+      return
+    }
 
     when (this.state) {
       State.STARTING -> {
         if (!InventoryUtil.holdItem(CommUtil.getTool())) {
-          this.disable(); return
+          this.setFailed()
+          this.disable()
+          return
         }
+
         this.state = State.CHECKING
 
         if (this.miningSpeed == 0 || this.miningSpeedBoost == 0) {
@@ -82,12 +100,12 @@ class MithrilMiner {
         autoInventory.getSpeedAndBoost()
         this.state = State.SPEED_AND_BOOST_VERIFY
 
-        log("MithrilMiner - Getting speed and boost")
+        log("[MithrilMiner] - Getting speed and boost")
       }
 
       State.SPEED_AND_BOOST_VERIFY -> {
         if (autoInventory.failed()) {
-          this.failed = true
+          this.setFailed()
           this.disable()
           return
         }
@@ -115,18 +133,18 @@ class MithrilMiner {
         if (availableMithrilBlocks.size < 6) {
           this.noMithrilTimer++
           if (noMithrilTimer > 200) {
-            log("MithrilMiner - Cannot find Mithril Blocks.")
-            this.failed = true
+            this.setFailed()
             this.disable()
+
+            log("[MithrilMiner] - Cannot find Mithril Blocks.")
+            return
           }
           if (availableMithrilBlocks.isEmpty()) return
+        } else {
+          this.noMithrilTimer = 0
         }
 
         this.currentBlock = availableMithrilBlocks[0]
-
-        if (availableMithrilBlocks.size > 6) {
-          this.noMithrilTimer = 0
-        }
         RenderUtil.markers.clear()
         RenderUtil.markers.add(currentBlock!!)
         this.state = State.LOOKING
@@ -145,14 +163,15 @@ class MithrilMiner {
           this.state = State.STARTING
           return
         }
-        if (AngleUtil.angleDifference(this.pointOnBlock!!, 1f, 1f)
-          || this.currentBlock == RaytracingUtil.getBlockLookingAt(10f)
-        ) {
-          this.timer = Timer(0)
-          this.state = State.BREAKING
 
-          log("MithrilMiner - Look Done")
-        }
+        if (!AngleUtil.angleDifference(this.pointOnBlock!!, 1f, 1f)
+          && this.currentBlock != RaytracingUtil.getBlockLookingAt(10f)
+        ) return
+
+        this.timer = Timer(0)
+        this.state = State.BREAKING
+
+        log("[MithrilMiner] - Look Done")
       }
 
       State.BREAKING -> {
@@ -161,7 +180,7 @@ class MithrilMiner {
         KeyBindUtil.holdLeftClick()
         this.state = State.BREAKING_VERIFY
 
-        log("MithrilMiner - MiningTicks: ${this.miningTicks}")
+        log("[MithrilMiner] - MiningTicks: ${this.miningTicks}")
       }
 
       State.BREAKING_VERIFY -> {
@@ -174,7 +193,7 @@ class MithrilMiner {
           this.state = State.STARTING
         }
 
-        log("MithrilMiner - Breaking Block Verify.")
+        log("[MithrilMiner] - Breaking Block Verify.")
       }
     }
   }

@@ -30,7 +30,6 @@ class Meth {
   lateinit var pathExec: PathExec private set
   lateinit var debugHUD: DebugHUD private set
   lateinit var autoWarp: AutoWarp private set
-  lateinit var failsafe: Failsafe private set
   lateinit var mobKiller: MobKiller private set
   lateinit var failsafeNew: FailsafeNew private set
   lateinit var infoBarUtil: InfoBarUtil private set
@@ -54,7 +53,6 @@ class Meth {
     pathExec = PathExec()
     debugHUD = DebugHUD()
     autoWarp = AutoWarp()
-    failsafe = Failsafe()
     mobKiller = MobKiller()
     infoBarUtil = InfoBarUtil()
     failsafeNew = FailsafeNew()

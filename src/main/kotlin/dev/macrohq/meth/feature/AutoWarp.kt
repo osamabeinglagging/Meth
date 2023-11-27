@@ -1,6 +1,7 @@
 package dev.macrohq.meth.feature
 
 import dev.macrohq.meth.util.*
+import dev.macrohq.meth.util.Logger.info
 import dev.macrohq.meth.util.Logger.log
 import net.minecraftforge.client.event.ClientChatReceivedEvent
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
@@ -9,10 +10,10 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent
 
 class AutoWarp {
   var enabled = false
-  private var failed = 0
-  private var success = false
+  private var failCounter = 0
+  private var succeeded = false
   private var forceEnable = false
-  private var failedToWarp = false
+  private var failed = false
   private var notOnSkyBlock = false
   private var timer = Timer(0)
   private var timeLimit = Timer(0)
@@ -21,14 +22,15 @@ class AutoWarp {
   fun enable(
     island: LocationUtil.Island? = null, subLocation: LocationUtil.SubLocation? = null, force: Boolean = false
   ) {
-    this.failed = 0
+    this.failed = false
     this.enabled = true
-    this.success = false
+    this.failCounter = 0
     this.island = island
-    this.forceEnable = force
     this.timer = Timer(0)
-    this.timeLimit = Timer(config.autoWarpTimeLimit)
+    this.succeeded = false
+    this.forceEnable = force
     this.subLocation = subLocation
+    this.timeLimit = Timer(config.autoWarpTimeLimit)
 
     log("Auto Warp Enabled")
   }
@@ -36,9 +38,10 @@ class AutoWarp {
   fun disable() {
     if(!this.enabled) return
 
-    this.failed = 0
+    this.failCounter = 0
     this.island = null
     this.enabled = false
+    this.failed = false
     this.subLocation = null
     this.timer = Timer(0)
     this.timeLimit = Timer(0)
@@ -46,29 +49,40 @@ class AutoWarp {
     log("Auto Warp Disabled")
   }
 
-  fun failed(): Boolean = !this.enabled && this.failedToWarp
-  fun succeeded(): Boolean = !this.enabled && this.success
+  fun setFailed(failed: Boolean = false){
+    this.failed = failed
+    this.succeeded = !failed
+  }
+
+  fun failed(): Boolean = !this.enabled && this.failed
+  fun succeeded(): Boolean = !this.enabled && this.succeeded
 
   @SubscribeEvent
   fun onTick(event: ClientTickEvent) {
-    if (player == null || world == null || event.phase == TickEvent.Phase.END || !this.enabled || !(failsafe.failsafeAllowance || this.forceEnable)) return
-
-    if (this.failed > 10 || timeLimit.isDone) {
-      this.failedToWarp = true
+    if (player == null || world == null || !this.enabled) return
+    if (!failsafe.failsafeAllowance && !forceEnable) {
       this.disable()
       return
     }
 
-    if (this.isDone()) {
-      this.success = true;
-      this.disable();
+    if (this.failCounter > 10 || timeLimit.isDone) {
+      this.setFailed()
+      this.disable()
 
-      log("AutoWarp - Warped to Desired Location Successfully");
+      log("[AutoWarp] - Could not warp to destination.")
+      return
+    }
+
+    if (this.isDone()) {
+      this.setFailed(false)
+      this.disable()
+
+      log("[AutoWarp] - Warped to Desired Location Successfully");
       return
     }
 
     if (!this.timer.isDone) return
-    this.failed++
+    this.failCounter++
 
     val currentIsland = locationUtil.currentIsland
     val currentSubLocation = locationUtil.currentSubLocation
@@ -78,7 +92,7 @@ class AutoWarp {
       player.sendChatMessage(getIslandWarpCommand(LocationUtil.Island.LOBBY))
       this.timer = Timer(config.autoWarpTime)
 
-      log("AutoWarp - Not on SkyBlock error.")
+      log("[AutoWarp] - Not on SkyBlock error.")
       return
     }
 
@@ -99,7 +113,7 @@ class AutoWarp {
       player.sendChatMessage(getIslandWarpCommand(this.island!!))
       timer = Timer(config.autoWarpTime)
 
-      log("AutoWarp - Player is not at desired island.")
+      log("[AutoWarp] - Player is not at desired island.")
       return
     }
 
@@ -107,13 +121,14 @@ class AutoWarp {
       player.sendChatMessage(getSubLocationWarpCommand(this.subLocation!!))
       this.timer = Timer(config.autoWarpTime)
 
-      log("AutoWarp - Player is not at desired location.")
+      log("[AutoWarp] - Player is not at desired location.")
       return
     }
   }
 
   @SubscribeEvent
   fun onChat(event: ClientChatReceivedEvent) {
+    if(!this.enabled) return
     if (event.type.toInt() != 0) return
     val message = event.message.unformattedText
 
@@ -121,6 +136,7 @@ class AutoWarp {
     val couldntWarp = "Couldn't warp you! Try again later."
     val sendingCommandsTooFast = "You are sending commands too fast! Please slow down."
     val notOnSkyBlock = "Oops! You are not on SkyBlock so we couldn't warp you!"
+    val noWarpScroll = "You haven't unlocked this fast travel destination!"
 
     if (message.contains(cannotJoinSB) || message.contains(couldntWarp) || message.contains(sendingCommandsTooFast)) {
       this.timer = Timer(config.autoWarpErrorWaitTime)
@@ -128,24 +144,20 @@ class AutoWarp {
     if (message.contains(notOnSkyBlock)) {
       this.notOnSkyBlock = true
     }
+    if(message.contains(noWarpScroll)){
+      this.setFailed()
+      this.disable()
+
+      info("[AutoWarp] - Please use the ${this.island!!.name} and ${this.subLocation!!.name} travel scrolls to unlock this destination.")
+    }
   }
 
   fun isDone(): Boolean {
     val currentIsland = locationUtil.currentIsland
     val currentSubLocation = locationUtil.currentSubLocation
-    if (this.island == null && this.subLocation == null) {
-      return true
-    }
-    if (this.island != null && this.subLocation != null) {
-      return currentIsland == this.island && currentSubLocation == this.subLocation
-    }
-    if (this.island != null) {
-      return currentIsland == this.island
-    }
-    if (this.subLocation != null) {
-      return currentSubLocation == this.subLocation
-    }
-    return true
+
+    return (this.island == null || currentIsland == this.island) &&
+        (this.subLocation == null || currentSubLocation == this.subLocation)
   }
 
   private fun getIslandWarpCommand(island: LocationUtil.Island): String {
