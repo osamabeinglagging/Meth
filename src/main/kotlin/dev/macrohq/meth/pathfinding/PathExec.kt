@@ -1,5 +1,6 @@
 package dev.macrohq.meth.pathfinding
 
+import dev.macrohq.meth.feature.helper.Angle
 import dev.macrohq.meth.util.*
 import dev.macrohq.meth.util.Logger.log
 import net.minecraft.util.BlockPos
@@ -32,7 +33,11 @@ class PathExec {
         disable(); return
       }
       next = route[route.indexOf(playerPointOnPath()) + 1]
-      RotationUtil.ease(RotationUtil.Rotation(AngleUtil.getAngles(next!!).yaw, 20f), 400)
+      autoRotation.easeToAngle(
+        Angle(AngleUtil.getAngle(next!!).yaw, 20f),
+        300,
+        relativeChange = true)
+//      RotationUtil.ease(RotationUtil.Rotation(AngleUtil.getAngles(next!!).yaw, 20f), 300)
     }
 
     val movement = MovementHelper.closestKeysetsToBlock(next!!)
@@ -52,7 +57,7 @@ class PathExec {
     enabled = false
     offPathTime = 0
     next = null
-    KeyBindUtil.movement(forward = false, backward = false, left = false, right = false)
+    KeyBindUtil.movement()
     gameSettings.keyBindSprint.setPressed(false)
     gameSettings.keyBindJump.setPressed(false)
   }

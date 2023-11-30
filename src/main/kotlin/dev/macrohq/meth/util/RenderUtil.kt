@@ -1,7 +1,10 @@
 package dev.macrohq.meth.util
 
+import net.minecraft.client.model.ModelBiped
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.Tessellator
+import net.minecraft.client.renderer.entity.RenderLiving
+import net.minecraft.client.renderer.entity.RenderPlayer
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import net.minecraft.entity.Entity
 import net.minecraft.util.AxisAlignedBB
@@ -9,6 +12,7 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
 import net.minecraftforge.client.event.RenderWorldLastEvent
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.GL_ALPHA
 import java.awt.Color
 import kotlin.math.sqrt
 
@@ -23,9 +27,11 @@ object RenderUtil {
   var white = Color(255, 255, 255)
 
   fun onRenderWorldLast(event: RenderWorldLastEvent) {
+    if(player == null || world == null) return
     val chromaHSB = Color.getHSBColor((System.currentTimeMillis() / 10 % 2000).toFloat() / 2000, 1f, 1f)
     val chroma = Color(chromaHSB.red, chromaHSB.green, chromaHSB.blue, 120)
     for (block in filledBox) {
+      drawBox(event, block, green, true)
       drawFilledBox(event, block, chroma, true)
     }
     for (block in markers) {
@@ -45,6 +51,30 @@ object RenderUtil {
     for (aabb in aabbs) {
       drawBox(event, aabb, white, true)
     }
+
+    val renderer = mc.renderManager.getEntityRenderObject<Entity>(player)
+    val model = (renderer as RenderPlayer).getMainModel()
+    val biped = model as ModelBiped
+    val arm = biped.bipedRightArm
+    val head = biped.bipedHead
+
+//    val aabb = AxisAlignedBB(
+//      player.posX + arm.rotationPointX.toDouble(),
+//      player.posY + arm.rotationPointY.toDouble(),
+//      player.posZ + arm.rotationPointZ.toDouble(),
+//      player.posX + arm.offsetX.toDouble() + arm.rotationPointX.toDouble(),
+//      player.posY + arm.offsetY.toDouble(),
+//      player.posZ + arm.offsetZ.toDouble() + arm.rotationPointZ
+//    )
+//
+//    println("aabb: " + aabb)
+
+//    drawBox(event, aabb, green, true)
+    drawPoints(event, Vec3(
+      player.posX + head.rotationPointX.toDouble(),
+      player.posY + head.rotationPointY.toDouble()+ player.height,
+      player.posZ + head.rotationPointZ.toDouble()),
+      green)
   }
 
   fun drawFilledBox(event: RenderWorldLastEvent, blockPos: BlockPos, color: Color, esp: Boolean) {

@@ -14,8 +14,6 @@ import cc.polyfrost.oneconfig.libs.universal.UKeyboard
 import dev.macrohq.meth.util.macroHandler
 
 class MethConfig : Config(Mod("Meth", ModType.UTIL_QOL), "meth.json") {
-
-
   /*
   * General
   */
@@ -56,7 +54,7 @@ class MethConfig : Config(Mod("Meth", ModType.UTIL_QOL), "meth.json") {
 
   @Dropdown(
     name = "Transport Method", category = "Commission Macro",
-    options = ["Etherwarpless", "Fly + Etherwarp", "Etherwarp"]
+    options = ["Etherwarpless", "Etherwarp", "Fly + Etherwarp + Walk", "Hybrid"]
   )
   val commTransport = 1
 
@@ -115,19 +113,19 @@ class MethConfig : Config(Mod("Meth", ModType.UTIL_QOL), "meth.json") {
   * Mob Killer
   */
   @Dropdown(
-    name = "Primary Weapon", category = "Mob Killer",
+    name = "Primary Weapon", category = "Commission Macro", subcategory = "Mob Killer",
     options = ["Frozen Scythe", "Aurora Staff", "Juju Shortbow", "Terminator"]
   )
   var mobKillerWeapon = 0
 
   @Slider(
-    name = "Mob Look Time", category = "Mob Killer", subcategory = "Time",
+    name = "Mob Look Time", category = "Commission Macro", subcategory = "Mob Killer",
     min = 100f, max = 1000f, step = 50
   )
   var mobKillerMobLookTime = 500
 
   @Slider(
-    name = "Attack Delay", category = "Mob Killer", subcategory = "Time",
+    name = "Attack Delay", category = "Commission Macro", subcategory = "Mob Killer",
     min = 100f, max = 1000f, step = 50
   )
   var mobKillerWaitAfterAttackTime = 100
@@ -210,31 +208,31 @@ class MethConfig : Config(Mod("Meth", ModType.UTIL_QOL), "meth.json") {
   /*    * AutoCommission SubCategory *    */
 
   @Slider(
-    name = "Auto Commission Time Limit", category = "Features", subcategory = "Auto Commission",
+    name = "Auto Commission Time Limit", category = "Commission Macro", subcategory = "Auto Commission",
     min = 1000f, max = 50000f, step = 10000
   )
   var autoCommissionTimeLimit = 30000
 
   @Slider(
-    name = "Ceanna Look Time", category = "Features", subcategory = "Auto Commission",
+    name = "Ceanna Look Time", category = "Commission Macro", subcategory = "Auto Commission",
     min = 100f, max = 1000f, step = 50
   )
   var autoCommissionCeannaLookTime = 300
 
   @Slider(
-    name = "GUI Open Time Limit", category = "Features", subcategory = "Auto Commission",
+    name = "GUI Open Time Limit", category = "Commission Macro", subcategory = "Auto Commission",
     min = 100f, max = 5000f, step = 100
   )
   var autoCommisionGuiOpenTimeLimit = 3000
 
   @Slider(
-    name = "Time for Commission Claim", category = "Features", subcategory = "Auto Commission",
+    name = "Time for Commission Claim", category = "Commission Macro", subcategory = "Auto Commission",
     min = 100f, max = 1000f, step = 50
   )
   var autoCommissionClickTime = 500
 
   @Slider(
-    name = "Time to wait in GUI", category = "Features", subcategory = "Auto Commission",
+    name = "Time to wait in GUI", category = "Commission Macro", subcategory = "Auto Commission",
     min = 100f, max = 2000f, step = 100
   )
   var autoCommissionInGUITime = 1000
@@ -253,7 +251,7 @@ class MethConfig : Config(Mod("Meth", ModType.UTIL_QOL), "meth.json") {
   var autoInventoryClickTime = 200
 
   @Slider(
-    name = "GUI Open Time",
+    name = "GUI Sleep Time",
     category = "Features",
     subcategory = "Auto Inventory",
     min = 100f,

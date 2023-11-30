@@ -2,6 +2,7 @@ package dev.macrohq.meth.pathfinding
 
 import dev.macrohq.meth.util.AngleUtil
 import dev.macrohq.meth.util.BlockUtil
+import dev.macrohq.meth.util.RenderUtil
 import dev.macrohq.meth.util.world
 import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
@@ -45,6 +46,8 @@ class AStarPathfinder(startPos: BlockPos, endPos: BlockPos) {
             path.add(0, currentNode.position)
             currentNode = currentNode.parent
         }
+        RenderUtil.markers.clear()
+        RenderUtil.markers.addAll(path)
         val smooth = mutableListOf<BlockPos>()
         if (path.isNotEmpty()) {
             smooth.add(path[0])

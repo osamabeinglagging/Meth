@@ -35,6 +35,8 @@ dependencies {
     embed("org.jetbrains.kotlin:kotlin-stdlib:1.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("com.google.code.gson:gson:2.10.1")
+
+    implementation("it.unimi.dsi:fastutil:8.5.12")
 }
 
 blossom {

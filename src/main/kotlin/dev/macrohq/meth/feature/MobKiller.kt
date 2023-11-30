@@ -57,16 +57,14 @@ class MobKiller {
       this.blackList.clear()
       this.blackListTimer = Timer(2500)
 
-      log("MobKiller - Mob Blacklist Cleared")
+      log("[MobKiller] - Mob Blacklist Cleared")
     }
 
-    if (this.currentEntity != null) {
-      if ((this.currentEntity as EntityOtherPlayerMP).health <= 0) {
-        this.blackList.add(this.currentEntity!!)
-        this.entities.remove(this.currentEntity!!)
-        this.currentEntity = null
-        this.state = State.CALCULATING
-      }
+    if (this.currentEntity != null && (this.currentEntity as EntityOtherPlayerMP).health <= 0) {
+      this.blackList.add(this.currentEntity!!)
+      this.entities.remove(this.currentEntity!!)
+      this.currentEntity = null
+      this.state = State.CALCULATING
     }
 
     when (this.state) {
@@ -77,7 +75,7 @@ class MobKiller {
       }
 
       State.CALCULATING -> {
-        if(!this.timer.isDone) return
+        if (!this.timer.isDone) return
 
         if (this.entities.size == 0) {
           this.entities = CommUtil.getCommissionMob().toMutableList()
@@ -90,14 +88,14 @@ class MobKiller {
           this.state = State.LOOKING
         }
 
-        log("MobKiller - Calculating Mobs.")
+        log("[MobKiller] - Finding Mobs.")
       }
 
       State.LOOKING -> {
         RotationUtil.lock(this.currentEntity!!, config.mobKillerMobLookTime)
         this.state = State.LOOKING_VERIFY
 
-        log("MobKiller - Looking at Mob.")
+        log("[MobKiller] - Looking at Mob.")
       }
 
       State.LOOKING_VERIFY -> {
@@ -105,7 +103,7 @@ class MobKiller {
           this.state = State.ATTACKING
         }
 
-        log("MobKiller - Verifying Looking at Mob.")
+        log("[MobKiller] - Verifying Looking at Mob.")
       }
 
       State.ATTACKING -> {
@@ -115,7 +113,7 @@ class MobKiller {
         RotationUtil.stop()
         this.state = State.STARTING
 
-        log("MobKiller - Attacking Mob.")
+        log("[MobKiller] - Attacking Mob.")
       }
     }
   }

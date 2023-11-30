@@ -6,6 +6,8 @@ import dev.macrohq.meth.util.*
 import dev.macrohq.meth.util.Logger.log
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent
+import oracle.jrockit.jfr.jdkevents.ThrowableTracer
+import kotlin.math.max
 
 class AutoAotv {
   private var failed = false
@@ -51,7 +53,8 @@ class AutoAotv {
 
   private fun getTime(node: RouteNode): Int {
     var time = config.autoAotvFlyLookTime
-    if(node.transportMethod == TransportMethod.ETHERWARP && player.onGround){
+    val previousNode = this.route[max(this.currentNodeIndex - 1, 0)]
+    if (node.transportMethod == TransportMethod.ETHERWARP && previousNode.transportMethod == TransportMethod.ETHERWARP) {
       time = config.autoAotvEtherwarpLookTime
     }
     return time
@@ -70,7 +73,7 @@ class AutoAotv {
   @SubscribeEvent
   fun onTick(event: ClientTickEvent) {
     if (player == null || world == null || !this.enabled) return
-  println("inOnTick")
+    println("inOnTick")
 
     if (this.timeLimit.isDone) {
       println("TimeLimit")
@@ -98,7 +101,7 @@ class AutoAotv {
         this.nextNode = this.route[currentNodeIndex]
         this.currentNodeIndex++
 
-        if(this.nextNode!!.transportMethod == TransportMethod.WALK){
+        if (this.nextNode!!.transportMethod == TransportMethod.WALK) {
           this.state = State.WALK
         }
 
@@ -108,7 +111,7 @@ class AutoAotv {
       State.LOOKING_AT_NEXT_BLOCK -> {
         this.state = State.LOOK_VERIFY
         val time = this.getTime(this.nextNode!!)
-        RotationUtil.lock(this.nextNode!!.block, time, true)
+        autoRotation.easeToBlock(this.nextNode!!.block, time, lockType = LockType.INSTANT)
 
         log("[AutoAotv] - Looking at Next Block. Time: $time")
       }
@@ -142,7 +145,7 @@ class AutoAotv {
         if (!this.timer.isDone) return
 
         KeyBindUtil.rightClick()
-        RotationUtil.stop()
+        autoRotation.stop()
 
         this.timer = Timer(config.autoAotvTeleportTimeLimit)
         this.state = State.AOTV_OR_ETHERWARP_VERIFY
@@ -163,7 +166,7 @@ class AutoAotv {
         val playerStandingOnNextNode = player.getStandingOnFloor() == this.nextNode!!.block
         val playerDistanceToNextBlock = player.distanceToBlock(nextNode!!.block)
         val shouldCrashIntoNextBlock = !world.isAirBlock(this.nextNode!!.block)
-            && this.nextNode!!.transportMethod == TransportMethod.FLY
+            && this.nextNode!!.transportMethod == TransportMethod.FLY && player.distanceToBlock(this.nextNode!!.block) > 2
 
         if (playerDistanceTraveledFromLastTick < 4 && !playerStandingOnNextNode && playerDistanceToNextBlock > 3) return
 
@@ -191,7 +194,7 @@ class AutoAotv {
 
       State.WALK_VERIFY -> {
         if (PathingUtil.hasFailed || this.timer.isDone) {
-          PathingUtil.stop(); RotationUtil.stop()
+          PathingUtil.stop(); autoRotation.stop()
           this.setFailed()
           println("Walk Failed")
           this.disable()
@@ -200,8 +203,10 @@ class AutoAotv {
 
         val playerDistanceToNextNode = player.distanceToBlock(this.nextNode!!.block)
 
-        if (playerDistanceToNextNode < 1 && player.onGround || PathingUtil.isDone) {
-          PathingUtil.stop(); RotationUtil.stop()
+        if ((playerDistanceToNextNode < .5 && player.onGround) || PathingUtil.isDone) {
+          PathingUtil.stop()
+          autoRotation.stop()
+          this.timer = Timer(0)
           this.state = State.FINDING_NEXT_BLOCK
 
           log("[AutoAotv] - Done Walking.")

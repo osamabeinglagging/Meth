@@ -9,7 +9,50 @@ import net.minecraft.util.BlockPos
 
 object RouteData {
 
-  val TEST = listOf(
+  /*New Start*/
+  val LAVA_ETHERWARP = listOf(
+    RouteNode(BlockPos(0, 165, -12), TransportMethod.ETHERWARP),
+    RouteNode(BlockPos(29, 206, -6), TransportMethod.ETHERWARP),
+    RouteNode(BlockPos(56, 222, -30), TransportMethod.ETHERWARP),
+  )
+
+  val LAVA_ETHERWARPLESS_1 = listOf(
+    RouteNode(BlockPos(4, 160, -43)),
+    RouteNode(BlockPos(9, 175, -12)),
+    RouteNode(BlockPos(27, 206, -13)),
+    RouteNode(BlockPos(54, 218, -12)),
+    RouteNode(BlockPos(55, 226, -32)),
+    RouteNode(BlockPos(56, 222, -30), TransportMethod.WALK)
+  )
+  val LAVA_ETHERWARPLESS_2 = listOf(
+    RouteNode(BlockPos(0, 160, -30), TransportMethod.FLY),
+    RouteNode(BlockPos(15, 196, -10), TransportMethod.FLY),
+    RouteNode(BlockPos(46, 216, -9), TransportMethod.FLY),
+    RouteNode(BlockPos(55, 226, -32), TransportMethod.FLY),
+    RouteNode(BlockPos(56, 222, -30), TransportMethod.WALK),
+  )
+  val LAVA_ETHERWARPLESS_3 = listOf(
+    RouteNode(BlockPos(3, 162, -20), TransportMethod.FLY),
+    RouteNode(BlockPos(31, 215, -9), TransportMethod.FLY),
+    RouteNode(BlockPos(48, 217, -10), TransportMethod.FLY),
+    RouteNode(BlockPos(55, 226, -32), TransportMethod.FLY),
+    RouteNode(BlockPos(56, 222, -30), TransportMethod.WALK),
+  )
+
+  val LAVA_HYBRID_1 = listOf(
+    RouteNode(BlockPos(8, 166, -22), TransportMethod.FLY),
+    RouteNode(BlockPos(30, 208, -10), TransportMethod.FLY),
+    RouteNode(BlockPos(38, 197, -8), TransportMethod.FLY),
+    RouteNode(BlockPos(44, 197, -12), TransportMethod.WALK),
+    RouteNode(BlockPos(52, 232, -15), TransportMethod.FLY),
+    RouteNode(BlockPos(53, 224, -31), TransportMethod.FLY),
+    RouteNode(BlockPos(55, 222, -30), TransportMethod.WALK),
+  )
+
+
+  /*New End*/
+
+  val LAVA_FLY_ETHERWARP_1 = listOf(
     RouteNode(BlockPos(4, 160, -43)),
     RouteNode(BlockPos(9, 175, -12)),
     RouteNode(BlockPos(27, 206, -13)),
@@ -33,10 +76,10 @@ object RouteData {
   private val LAVA_AOTV = listOf(
     BlockPos(4, 160, -43), BlockPos(9, 175, -12), BlockPos(27, 206, -13), BlockPos(54, 218, -12), BlockPos(56, 222, -30)
   )
-  private val LAVA_ETHERWARP = listOf(
+  private val LAVA_ETHERWARPP = listOf(
     BlockPos(0, 165, -12), BlockPos(30, 206, -6), BlockPos(56, 222, -30)
   )
-  private val LAVA_ETHERWARPLESS = listOf(
+  private val LAVA_ETHERWARPLESSs = listOf(
     BlockPos(4, 160, -43),
     BlockPos(9, 175, -12),
     BlockPos(27, 206, -13),
@@ -191,7 +234,7 @@ object RouteData {
   fun getRoute(comm: CommissionType, fly: Int = config.commTransport): List<BlockPos> {
     return when (comm) {
       MITHRIL_MINER, TITANIUM_MINER, LAVA_TITANIUM, LAVA_MITHRIL -> {
-        properRoute(LAVA_AOTV, LAVA_ETHERWARP, LAVA_ETHERWARPLESS, fly)
+        properRoute(LAVA_AOTV, LAVA_ETHERWARPP, LAVA_ETHERWARPLESSs, fly)
       }
 
       UPPER_MITHRIL, UPPER_TITANIUM -> {

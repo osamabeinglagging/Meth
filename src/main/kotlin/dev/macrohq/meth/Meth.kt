@@ -33,6 +33,7 @@ class Meth {
   lateinit var mobKiller: MobKiller private set
   lateinit var failsafeNew: FailsafeNew private set
   lateinit var infoBarUtil: InfoBarUtil private set
+  lateinit var autoRotation: AutoRotation private set
   lateinit var worldScanner: WorldScanner private set
   lateinit var locationUtil: LocationUtil private set
   lateinit var mithrilMiner: MithrilMiner private set
@@ -56,6 +57,7 @@ class Meth {
     mobKiller = MobKiller()
     infoBarUtil = InfoBarUtil()
     failsafeNew = FailsafeNew()
+    autoRotation = AutoRotation()
     worldScanner = WorldScanner()
     locationUtil = LocationUtil()
     mithrilMiner = MithrilMiner()
@@ -79,6 +81,7 @@ class Meth {
     MinecraftForge.EVENT_BUS.register(infoBarUtil)
     MinecraftForge.EVENT_BUS.register(this)
     MinecraftForge.EVENT_BUS.register(mithrilMiner)
+    MinecraftForge.EVENT_BUS.register(autoRotation)
     MinecraftForge.EVENT_BUS.register(macroHandler)
     MinecraftForge.EVENT_BUS.register(autoInventory)
     MinecraftForge.EVENT_BUS.register(randomMovement)
