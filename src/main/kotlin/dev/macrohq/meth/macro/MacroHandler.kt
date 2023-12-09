@@ -1,6 +1,6 @@
 package dev.macrohq.meth.macro
 
-import dev.macrohq.meth.util.UnGrabUtil
+import dev.macrohq.meth.macro.macros.CommissionMacro
 import dev.macrohq.meth.util.commissionMacro
 import dev.macrohq.meth.util.config
 import dev.macrohq.meth.util.failsafe
@@ -9,15 +9,33 @@ import net.minecraftforge.client.event.RenderWorldLastEvent
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
 
-class MacroHandler : Macro() {
+class MacroHandler : AbstractMacro() {
 
-  val activeMacro: Macro = activeMacro()
+  val activeMacro: AbstractMacro = activeMacro()
   var enabled = false
   var startTime = 0L
 
   override val macroName = "Macro Handler"
   override val location get() = activeMacro.location
   override val subMacroActive get() = activeMacro.subMacroActive
+  private var macros = mutableListOf<AbstractMacro>()
+
+  companion object{
+    private var instance: MacroHandler? = null
+    fun getInstance(): MacroHandler {
+      if (instance == null) instance = MacroHandler()
+      return instance!!
+    }
+  }
+
+  fun loadMacros(): List<AbstractMacro>{
+    val macros = listOf(
+      CommissionMacro.getInstance(),
+      getInstance()
+    )
+    this.macros.addAll(macros)
+    return this.macros
+  }
 
   override fun enable(softEnable: Boolean) {
     this.activeMacro.enable(softEnable)
@@ -64,7 +82,7 @@ class MacroHandler : Macro() {
     this.activeMacro.onChat(event)
   }
 
-  private fun activeMacro(): Macro {
+  private fun activeMacro(): AbstractMacro {
     return when (config.chosenMacro) {
       0 -> commissionMacro
       else -> commissionMacro

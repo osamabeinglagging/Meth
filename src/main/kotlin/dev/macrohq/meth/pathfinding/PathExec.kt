@@ -1,10 +1,10 @@
 package dev.macrohq.meth.pathfinding
 
 import dev.macrohq.meth.feature.helper.Angle
+import dev.macrohq.meth.feature.helper.Target
 import dev.macrohq.meth.util.*
 import dev.macrohq.meth.util.Logger.log
 import net.minecraft.util.BlockPos
-import net.minecraft.util.Vec3
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent
 import kotlin.math.pow
@@ -33,10 +33,9 @@ class PathExec {
         disable(); return
       }
       next = route[route.indexOf(playerPointOnPath()) + 1]
-      autoRotation.easeToAngle(
-        Angle(AngleUtil.getAngle(next!!).yaw, 20f),
-        300,
-        relativeChange = true)
+      autoRotation.easeTo(
+        Target(Angle(AngleUtil.getAngle(next!!).yaw, 20f)),
+        300)
 //      RotationUtil.ease(RotationUtil.Rotation(AngleUtil.getAngles(next!!).yaw, 20f), 300)
     }
 

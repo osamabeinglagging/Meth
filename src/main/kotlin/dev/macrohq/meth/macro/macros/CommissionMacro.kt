@@ -1,7 +1,7 @@
 package dev.macrohq.meth.macro.macros
 
-import dev.macrohq.meth.feature.RouteData
-import dev.macrohq.meth.macro.Macro
+import dev.macrohq.meth.feature.implementation.LocationTracker
+import dev.macrohq.meth.macro.AbstractMacro
 import dev.macrohq.meth.util.*
 import dev.macrohq.meth.util.Logger.info
 import dev.macrohq.meth.util.Logger.log
@@ -11,7 +11,7 @@ import net.minecraftforge.client.event.ClientChatReceivedEvent
 import net.minecraftforge.client.event.RenderWorldLastEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
 
-class CommissionMacro : Macro() {
+class CommissionMacro : AbstractMacro() {
   override var macroName = "Commission Macro"
 
   var enabled = false
@@ -24,7 +24,15 @@ class CommissionMacro : Macro() {
   private var timer = Timer(0)
   private var currentCommission = CommissionType.COMMISSION_CLAIM
   override var subMacroActive: Boolean = false
-  override val location = Pair(LocationUtil.Island.DWARVEN_MINES, LocationUtil.SubLocation.The_Forge)
+  override val location = Pair(LocationTracker.Island.DWARVEN_MINES, LocationTracker.SubLocation.The_Forge)
+
+  companion object{
+    private var instance: CommissionMacro? = null
+    fun getInstance(): CommissionMacro{
+      if(instance == null) instance = CommissionMacro()
+      return instance!!
+    }
+  }
 
   enum class CommissionType(val commName: String) {
     MITHRIL_MINER("Mithril Miner"), TITANIUM_MINER("Titanium Miner"), UPPER_MITHRIL("Upper Mines Mithril"), ROYAL_MITHRIL(
@@ -63,7 +71,7 @@ class CommissionMacro : Macro() {
   override fun disable(softDisable: Boolean) {
 
     this.timer = Timer(0)
-    RotationUtil.stop()
+    autoRotation.disable()
     this.disableMacros()
     this.enabled = false
     this.state = State.STARTING
@@ -118,7 +126,7 @@ class CommissionMacro : Macro() {
       }
 
       State.GET_SPEED_AND_BOOST -> {
-        InventoryUtil.holdItem(CommUtil.getTool())
+        InventoryUtil.setHotbarSlotForItem(CommUtil.getTool())
         autoInventory.getSpeedAndBoost()
         this.state = State.SPEED_AND_BOOST_VERIFY
 
@@ -245,7 +253,7 @@ class CommissionMacro : Macro() {
       State.WARP -> {
         if (!this.timer.isDone) return
 
-        autoWarp.enable(null, LocationUtil.SubLocation.The_Forge)
+        autoWarp.enable(null, LocationTracker.SubLocation.The_Forge)
         this.timer = Timer(15000)
         this.state = State.WARP_VERIFY
 

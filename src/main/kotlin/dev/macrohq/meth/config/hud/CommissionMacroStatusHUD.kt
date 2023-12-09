@@ -9,6 +9,14 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 
 class CommissionMacroStatusHUD : Gui() {
 
+  companion object{
+    private var instance: CommissionMacroStatusHUD? = null
+    fun getInstance(): CommissionMacroStatusHUD{
+      if(instance == null) instance = CommissionMacroStatusHUD()
+      return instance!!
+    }
+  }
+
   @SubscribeEvent
   fun onRenderOverlay(event: RenderGameOverlayEvent) {
     if (event.isCancelable || event.type != RenderGameOverlayEvent.ElementType.ALL || !config.commStatusHUD || !macroHandler.enabled) return

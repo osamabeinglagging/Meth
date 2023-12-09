@@ -39,11 +39,6 @@ class MethConfig : Config(Mod("Meth", ModType.UTIL_QOL), "meth.json") {
   val ungrabMouse = false
 
   @Switch(
-    name = "Location HUD", category = "General"
-  )
-  val showLocation = false
-
-  @Switch(
     name = "Auto reconnect", category = "General"
   )
   val autoReconnect = true

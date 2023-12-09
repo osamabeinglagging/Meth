@@ -51,7 +51,10 @@ object BlockUtil {
   private fun mithrilCost(block: BlockPos): Float {
     val hardness = hardnessCost(block)
     val bestPoint = bestPointOnBlock(block)
-    val rot = abs(AngleUtil.getYawChange(bestPoint)) + abs(AngleUtil.getPitchChange(bestPoint))
+
+    val angChange = AngleUtil.calculateNeededAngleChange(bestPoint)
+
+    val rot = abs(angChange.yaw) + abs(angChange.pitch)
     val distance = bestPoint.distanceTo(player.headPosition())
     return (rot * .15 + hardness * .5 + distance * .35).toFloat()
   }
@@ -268,7 +271,8 @@ object BlockUtil {
     return pointsOnBlockVisible(block).filter {
       RaytracingUtil.canSeePoint(it)
     }.minByOrNull {
-      abs(AngleUtil.getYawChange(it)) + abs(AngleUtil.getPitchChange(it))
+      val angChange = AngleUtil.calculateNeededAngleChange(it)
+      abs(angChange.yaw) + abs(angChange.pitch)
     } ?: Vec3(block).addVector(.5, .5, .5)
   }
 

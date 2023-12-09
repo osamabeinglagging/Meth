@@ -1,71 +1,31 @@
 package dev.macrohq.meth.util
 
 import dev.macrohq.meth.feature.helper.Angle
-import dev.macrohq.meth.util.RotationUtil.Rotation
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
 import net.minecraft.util.BlockPos
 import net.minecraft.util.MathHelper
 import net.minecraft.util.Vec3
-import java.math.BigDecimal
 import kotlin.math.*
 
 object AngleUtil {
+  val PLAYER_ANGLE get() = Angle(normalizeAngle(player.rotationYaw), player.rotationPitch)
 
   fun yawTo360(yaw: Float): Float {
     return (((yaw % 360) + 360) % 360)
   }
-
-  fun getAngles(vec: Vec3): Rotation {
-    val diffX = vec.xCoord - player.posX
-    val diffY = vec.yCoord - (player.posY + player.getEyeHeight())
-    val diffZ = vec.zCoord - player.posZ
-    val dist = sqrt(diffX * diffX + diffZ * diffZ)
-    val yaw = (atan2(diffZ, diffX) * 180.0 / Math.PI).toFloat() - 90f
-    val pitch = (-(atan2(diffY, dist) * 180.0 / Math.PI)).toFloat()
-    return Rotation(
-      player.rotationYaw + MathHelper.wrapAngleTo180_float(yaw - player.rotationYaw),
-      player.rotationPitch + MathHelper.wrapAngleTo180_float(pitch - player.rotationPitch)
-    )
+  private fun normalizeAngle(yaw: Float): Float {
+    var convertedYaw = yaw % 360.0f
+    if (convertedYaw > 180.0f) {
+      convertedYaw -= 360.0f
+    } else if (convertedYaw < -180.0f) {
+      convertedYaw += 360.0f
+    }
+    return convertedYaw
   }
 
-  fun getDiffBetweenBlockPos(first: BlockPos, second: BlockPos) =
-    getAngles(first.toVec3()).yaw - getAngles(second.toVec3()).yaw
-
-  fun getAngles(block: BlockPos) = getAngles(block.toVec3())
-  fun getAngles(entity: Entity) = getAngles((entity as EntityLivingBase).headPosition())
-
-  fun getNeededChange(startRot: Rotation, endRot: Rotation): Rotation {
-    var yawChange = MathHelper.wrapAngleTo180_float(endRot.yaw) - MathHelper.wrapAngleTo180_float(startRot.yaw)
-    if (yawChange <= -180.0f) yawChange += 360.0f else if (yawChange > 180.0f) yawChange += -360.0f
-    return Rotation(yawChange, endRot.pitch - startRot.pitch)
-  }
-
-  fun getYawChange(position: Vec3): Float {
-    val startRot = Rotation(player.rotationYaw, 0f)
-    val endRot = Rotation(getAngles(position).yaw, 0f)
-    return getNeededChange(startRot, endRot).yaw
-  }
-
-  fun getPitchChange(position: Vec3): Float = getAngles(position).pitch - player.rotationPitch
-  fun angleDifference(block: BlockPos, yawDifference: Float, pitchDifference: Float): Boolean {
-    val yawChange = abs(getYawChange(BlockUtil.bestPointOnBlock(block)))
-    val pitchChange = abs(getPitchChange(BlockUtil.bestPointOnBlock(block)))
-    return yawChange < yawDifference && pitchChange < pitchDifference
-  }
-
-  fun angleDifference(position: Vec3, yawDifference: Float, pitchDifference: Float): Boolean {
-    return abs(getYawChange(position)) < yawDifference && abs(getPitchChange(position)) < pitchDifference
-  }
-
-  fun angleDifference(entity: Entity, yawDifference: Float, pitchDifference: Float): Boolean {
-    val entityPos = entity.positionVector.addVector(0.0, 0.8, 0.0)
-    return abs(getYawChange(entityPos)) < yawDifference && abs(getPitchChange(entityPos)) < pitchDifference
-  }
-
-  fun bowAngle(target: Entity): Rotation {
-    // Skidded from Wurst Client I Legit wasted a lot of time watching videos trying to figure out the equation for
-    // Projectile Velocity with Linear Drag. cant figure it out :sadge:
+  // Skidded from Wurst Client I Legit wasted a lot of time watching videos trying to figure out the equation for
+  // Projectile Velocity with Linear Drag. cant figure it out :sadge:
+  fun bowAngle(target: Entity): Angle {
     val velocity = 1f
     val d = player.getPositionEyes(1f).distanceTo(target.positionVector.addVector(.5, 1.0, .5))
     val posX = (target.posX + (target.posX - target.lastTickPosX) * d - player.posX)
@@ -85,10 +45,9 @@ object AngleUtil {
     val neededPitch =
       -Math.toDegrees(atan((velocitySq - sqrt(velocityPow4 - g * (g * hDistanceSq + 2 * posY * velocitySq))) / (g * hDistance)))
         .toFloat()
-    return Rotation(neededYaw, neededPitch)
+    return Angle(neededYaw, neededPitch)
   }
 
-  // Converting Shit to Angle class
   fun getAngle(endVec: Vec3, startVec: Vec3 = Vec3(player.posX, player.posY + player.eyeHeight, player.posZ)): Angle {
     val dX = endVec.xCoord - startVec.xCoord
     val dY = endVec.yCoord - startVec.yCoord
@@ -98,20 +57,51 @@ object AngleUtil {
     val pitch = -Math.toDegrees(atan2(dY, sqrt(dX * dX + dZ * dZ))).toFloat()
     return Angle(this.reduceTrailingPointsTo(yaw, 2), this.reduceTrailingPointsTo(pitch, 2))
   }
+
   fun getAngle(blockPos: BlockPos): Angle {
     return getAngle(BlockUtil.getClosestSidePos(blockPos))
   }
-  fun getAngle(entity: Entity, height: Float = 1.5f): Angle{
+
+  fun getAngle(entity: Entity, height: Float = 1.5f): Angle {
     return getAngle(entity.positionVector.addVector(0.0, height.toDouble(), 0.0))
   }
-  fun getNeededAngleChange(startRot: Angle, endRot: Angle): Angle {
+
+  fun calculateNeededAngleChange(entity: Entity, height: Float = 1.5f): Angle {
+    val end = entity.positionVector.addVector(0.0, height.toDouble(), 0.0)
+    return calculateNeededAngleChange(end)
+  }
+
+  fun calculateNeededAngleChange(blockPos: BlockPos): Angle {
+    return calculateNeededAngleChange(BlockUtil.getClosestSidePos(blockPos))
+  }
+
+  fun calculateNeededAngleChange(vecPos: Vec3): Angle {
+    val end = getAngle(vecPos)
+    return calculateNeededAngleChange(PLAYER_ANGLE, end)
+  }
+
+  fun calculateNeededAngleChange(startRot: Angle, endRot: Angle): Angle {
     var yawChange = MathHelper.wrapAngleTo180_float(endRot.yaw) - MathHelper.wrapAngleTo180_float(startRot.yaw)
     if (yawChange <= -180.0f) yawChange += 360.0f else if (yawChange > 180.0f) yawChange += -360.0f
     return Angle(yawChange, endRot.pitch - startRot.pitch)
   }
 
-  fun reduceTrailingPointsTo(value: Float, number: Int = 2): Float{
+  fun reduceTrailingPointsTo(value: Float, number: Int = 2): Float {
     val multiplier = 10f.pow(number)
-    return (value*multiplier).toInt()/multiplier
+    return (value * multiplier).toInt() / multiplier
+  }
+
+
+  fun isWithinAngleThreshold(blockPos: BlockPos, maxAllowedYawDifference: Float, maxAllowedPitchDifference: Float): Boolean{
+    return isWithinAngleThreshold(BlockUtil.bestPointOnBlock(blockPos), maxAllowedYawDifference, maxAllowedPitchDifference)
+  }
+
+  fun isWithinAngleThreshold(entity: Entity, maxAllowedYawDifference: Float, maxAllowedPitchDifference: Float, height: Float = 1.5f): Boolean{
+    return isWithinAngleThreshold(entity.positionVector.addVector(0.0, height.toDouble(), 0.0), maxAllowedYawDifference, maxAllowedPitchDifference)
+  }
+
+  fun isWithinAngleThreshold(targetPosition: Vec3, maxAllowedYawDifference: Float, maxAllowedPitchDifference: Float): Boolean {
+    val neededAngleChange = calculateNeededAngleChange(targetPosition)
+    return abs(neededAngleChange.yaw) < maxAllowedYawDifference && abs(neededAngleChange.pitch) < maxAllowedPitchDifference
   }
 }

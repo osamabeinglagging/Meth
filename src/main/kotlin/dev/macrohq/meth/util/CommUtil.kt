@@ -59,9 +59,8 @@ object CommUtil {
     return world.loadedEntityList.filterIsInstance<EntityOtherPlayerMP>().filter {
       player.canEntityBeSeen(it) && it.name == "Ice Walker" && player.getDistanceToEntity(it) < 64
     }.sortedBy {
-      player.getDistanceToEntity(it) + abs(AngleUtil.getYawChange(it.positionVector)) + abs(
-        AngleUtil.getPitchChange(it.positionVector)
-      )
+      val angChange = AngleUtil.calculateNeededAngleChange(it)
+      player.getDistanceToEntity(it) + abs(angChange.yaw) + abs(angChange.pitch)
     }
   }
 
@@ -69,9 +68,8 @@ object CommUtil {
     return world.loadedEntityList.filterIsInstance<EntityOtherPlayerMP>().filter {
       player.canEntityBeSeen(it) && it.name.contains("Goblin") && player.getDistanceToEntity(it) < 30
     }.sortedBy {
-      player.getDistanceToEntity(it) + abs(AngleUtil.getYawChange(it.positionVector)) + abs(
-        AngleUtil.getPitchChange(it.positionVector)
-      )
+      val angChange = AngleUtil.calculateNeededAngleChange(it)
+      player.getDistanceToEntity(it) + abs(angChange.yaw) + abs(angChange.pitch)
     }
   }
 
@@ -81,5 +79,12 @@ object CommUtil {
       1 -> "Aspect of the Void"
       else -> "hello your comuter has vairasi"
     }
+  }
+
+  fun getCommissionSlot(): Int {
+    val comm = player.openContainer.inventorySlots.firstOrNull {
+      it.hasStack && InventoryUtil.getLore(it.slotNumber).contains("completed", ignoreCase = true)
+    }
+    return comm?.slotIndex ?: -1
   }
 }
