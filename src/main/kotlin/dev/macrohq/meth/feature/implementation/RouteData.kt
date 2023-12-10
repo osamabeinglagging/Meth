@@ -22,21 +22,21 @@ object RouteData {
     RouteNode(BlockPos(27, 206, -13)),
     RouteNode(BlockPos(54, 218, -12)),
     RouteNode(BlockPos(55, 226, -32)),
-    RouteNode(BlockPos(56, 222, -30), TransportMethod.WALK)
+    RouteNode(BlockPos(56, 222, -30), TransportMethod.SNEAK_WALK)
   )
   val LAVA_ETHERWARPLESS_2 = listOf(
     RouteNode(BlockPos(0, 160, -30), TransportMethod.FLY),
     RouteNode(BlockPos(15, 196, -10), TransportMethod.FLY),
     RouteNode(BlockPos(46, 216, -9), TransportMethod.FLY),
     RouteNode(BlockPos(55, 226, -32), TransportMethod.FLY),
-    RouteNode(BlockPos(56, 222, -30), TransportMethod.WALK),
+    RouteNode(BlockPos(56, 222, -30), TransportMethod.SNEAK_WALK),
   )
   val LAVA_ETHERWARPLESS_3 = listOf(
     RouteNode(BlockPos(3, 162, -20), TransportMethod.FLY),
     RouteNode(BlockPos(31, 215, -9), TransportMethod.FLY),
     RouteNode(BlockPos(48, 217, -10), TransportMethod.FLY),
     RouteNode(BlockPos(55, 226, -32), TransportMethod.FLY),
-    RouteNode(BlockPos(56, 222, -30), TransportMethod.WALK),
+    RouteNode(BlockPos(56, 222, -30), TransportMethod.SNEAK_WALK),
   )
 
   val LAVA_HYBRID_1 = listOf(
@@ -46,7 +46,39 @@ object RouteData {
     RouteNode(BlockPos(44, 197, -12), TransportMethod.WALK),
     RouteNode(BlockPos(52, 232, -15), TransportMethod.FLY),
     RouteNode(BlockPos(53, 224, -31), TransportMethod.FLY),
-    RouteNode(BlockPos(55, 222, -30), TransportMethod.WALK),
+    RouteNode(BlockPos(56, 222, -30), TransportMethod.SNEAK_WALK),
+  )
+
+  val LAVA_HYBRID_2 = listOf(
+    RouteNode(BlockPos(0, 165, -12), TransportMethod.ETHERWARP),
+    RouteNode(BlockPos(28, 206, -6), TransportMethod.ETHERWARP),
+    RouteNode(BlockPos(31, 206, -6), TransportMethod.SNEAK_WALK),
+    RouteNode(BlockPos(51, 206, -6), TransportMethod.WALK),
+    RouteNode(BlockPos(54, 228, -18), TransportMethod.FLY),
+    RouteNode(BlockPos(54, 224, -32), TransportMethod.FLY),
+    RouteNode(BlockPos(56, 222, -30), TransportMethod.SNEAK_WALK),
+  )
+
+  val LAVA_HYBRID_3 = listOf(
+    RouteNode(BlockPos(8, 166, -25), TransportMethod.FLY),
+    RouteNode(BlockPos(28, 206, -6), TransportMethod.ETHERWARP),
+    RouteNode(BlockPos(30, 206, -6), TransportMethod.SNEAK_WALK),
+    RouteNode(BlockPos(42, 206, -6), TransportMethod.WALK),
+    RouteNode(BlockPos(54, 228, -16), TransportMethod.FLY),
+    RouteNode(BlockPos(53, 224, -31), TransportMethod.FLY),
+    RouteNode(BlockPos(55, 222, -30), TransportMethod.SNEAK_WALK),
+  )
+
+  private val CEANNA_ETHERWARP = listOf(
+    BlockPos(6, 148, -12), BlockPos(32, 152, -1), BlockPos(41, 135, 18), BlockPos(41, 134, 21)
+  )
+
+  val CEANNA_HYBRID_1 = listOf(
+    RouteNode(BlockPos(6, 153, -21), TransportMethod.FLY),
+    RouteNode(BlockPos(23, 143, -4), TransportMethod.FLY),
+    RouteNode(BlockPos(39, 135, 15), TransportMethod.WALK),
+    RouteNode(BlockPos(41, 135, 18), TransportMethod.WALK),
+    RouteNode(BlockPos(42, 134, 20), TransportMethod.SNEAK_WALK),
   )
 
 
@@ -62,9 +94,6 @@ object RouteData {
 
   private val CEANNA_AOTV = listOf(
     BlockPos(7, 158, -23), BlockPos(44, 146, 18), BlockPos(43, 134, 21)
-  )
-  private val CEANNA_ETHERWARP = listOf(
-    BlockPos(6, 148, -12), BlockPos(32, 152, -1), BlockPos(41, 135, 18), BlockPos(41, 134, 21)
   )
   private val CEANNA_ETHERWARPLESS = listOf(
     BlockPos(12, 158, -23),

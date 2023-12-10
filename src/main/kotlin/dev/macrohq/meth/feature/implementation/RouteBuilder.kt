@@ -38,7 +38,8 @@ object RouteBuilder {
           log("press any:")
           log("1. Fly")
           log("2. Walk")
-          log("3. Etherwarp")
+          log("3. Sneak Walk")
+          log("4. Etherwarp")
         }
       }
       RenderUtil.filledBox.add(tempBlock!!)
@@ -73,7 +74,8 @@ object RouteBuilder {
       val transportMethod: TransportMethod = when {
         Keyboard.isKeyDown(Keyboard.KEY_1) -> TransportMethod.FLY
         Keyboard.isKeyDown(Keyboard.KEY_2) -> TransportMethod.WALK
-        Keyboard.isKeyDown(Keyboard.KEY_3) -> TransportMethod.ETHERWARP
+        Keyboard.isKeyDown(Keyboard.KEY_3) -> TransportMethod.SNEAK_WALK
+        Keyboard.isKeyDown(Keyboard.KEY_4) -> TransportMethod.ETHERWARP
         Keyboard.isKeyDown(Keyboard.KEY_DIVIDE) -> {
           createNode = false
           log("Exiting Save.")

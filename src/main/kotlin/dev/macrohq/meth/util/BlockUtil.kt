@@ -3,6 +3,7 @@ package dev.macrohq.meth.util
 import dev.macrohq.meth.pathfinding.AStarPathfinder
 import dev.macrohq.meth.util.algorithm.Sort
 import net.minecraft.block.BlockStairs
+import net.minecraft.block.state.IBlockState
 import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
@@ -43,7 +44,7 @@ object BlockUtil {
     }
     blocks.removeAll(tita)
     blocks.remove(player.getStandingOnFloor())
-    Sort.quickSort(blocks, 0, blocks.size-1, ::mithrilCost)
+    Sort.quickSort(blocks, 0, blocks.size - 1, ::mithrilCost)
     blocks.addAll(0, tita)
     return blocks.toMutableSet().toMutableList()
   }
@@ -122,7 +123,7 @@ object BlockUtil {
 
   fun isStairSlab(block: BlockPos): Boolean {
     return world.getBlockState(block).block is BlockStairs ||
-            world.getBlockState(block).block is BlockStairs
+        world.getBlockState(block).block is BlockStairs
   }
 
   fun blocksBetweenValid(startPoss: BlockPos, endPoss: BlockPos): Boolean {
@@ -160,7 +161,63 @@ object BlockUtil {
     return true
   }
 
-  private fun bresenham(start: Vec3, end: Vec3): List<BlockPos> {
+  fun getDirectionToWalkOnStairs(state: IBlockState): EnumFacing {
+    return when (state.block.getMetaFromState(state)) {
+      0 -> {
+        EnumFacing.EAST
+      }
+
+      1 -> {
+        EnumFacing.WEST
+      }
+
+      2 -> {
+        EnumFacing.SOUTH
+      }
+
+      3 -> {
+        EnumFacing.NORTH
+      }
+
+      4 -> {
+        EnumFacing.DOWN
+      }
+
+      else -> EnumFacing.UP
+    }
+  }
+
+  fun getPlayerDirectionToBeAbleToWalkOnBlock(startPos: BlockPos, endPoss: BlockPos): EnumFacing {
+    val deltaX: Int = endPoss.x - startPos.x
+    val deltaZ: Int = endPoss.z - startPos.z
+
+    return if (abs(deltaX) > abs(deltaZ)) {
+      if (deltaX > 0) EnumFacing.EAST else EnumFacing.WEST
+    } else {
+      if (deltaZ > 0) EnumFacing.SOUTH else EnumFacing.NORTH
+    }
+  }
+
+  fun canWalkOn(startPos: BlockPos, endPos: BlockPos): Boolean {
+    val startState = world.getBlockState(startPos)
+    val endState = world.getBlockState(endPos)
+    if (!endState.block.material.isSolid) {
+      return endPos.y - startPos.y <= 1
+    }
+    if (endState.block is BlockStairs &&
+      getPlayerDirectionToBeAbleToWalkOnBlock(startPos, endPos) == getDirectionToWalkOnStairs(endState)
+    ) {
+      return true
+    }
+    val startHeight = startState.block.getCollisionBoundingBox(world, startPos, startState).maxY
+    val endHeight = endState.block.getCollisionBoundingBox(world, endPos, endState).maxY
+    if (endHeight - startHeight <= .5) {
+      return true
+    }
+    return false
+  }
+
+  fun bresenham(start: Vec3, end: Vec3): List<BlockPos> {
     var start0 = start
     val blocks = mutableListOf(start0.toBlockPos())
     val x1 = MathHelper.floor_double(end.xCoord)
@@ -229,7 +286,30 @@ object BlockUtil {
       x0 = MathHelper.floor_double(start0.xCoord) - if (enumfacing == EnumFacing.EAST) 1 else 0
       y0 = MathHelper.floor_double(start0.yCoord) - if (enumfacing == EnumFacing.UP) 1 else 0
       z0 = MathHelper.floor_double(start0.zCoord) - if (enumfacing == EnumFacing.SOUTH) 1 else 0
-      blocks.add(BlockPos(x0, y0, z0))
+      val pos = BlockPos(x0, y0, z0)
+      if (world.isAirBlock(pos)) {
+        val down = pos.down()
+        val down2 = pos.add(0, -2, 0)
+        if (!world.isAirBlock(down)) {
+          blocks.add(down)
+        } else if (!world.isAirBlock(down2)) {
+          blocks.add(down2)
+        } else return emptyList()
+      }
+      if (!world.isAirBlock(pos)) {
+        val airUp = world.isAirBlock(pos.up())
+        val airUp2 = world.isAirBlock(pos.add(0, 2, 0))
+        val airUp3 = world.isAirBlock(pos.add(0, 3, 0))
+        if (airUp) {
+          blocks.add(pos)
+        } else if (airUp2) {
+          blocks.add(pos.up())
+        } else if (airUp3) {
+          blocks.add(pos.add(0, 2, 0))
+        } else {
+          return emptyList()
+        }
+      }
     }
     return blocks
   }

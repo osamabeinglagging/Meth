@@ -10,11 +10,13 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+// I know this is bad icba fix it if anyone nags me about it im going to nuke them
 class PathExec {
   var enabled = false
   private var route = mutableListOf<BlockPos>()
   var next: BlockPos? = null
   private var offPathTime = 0
+  private var shouldSneak: Boolean = false
 
   @SubscribeEvent
   fun onTick(event: ClientTickEvent) {
@@ -33,22 +35,25 @@ class PathExec {
         disable(); return
       }
       next = route[route.indexOf(playerPointOnPath()) + 1]
-      autoRotation.easeTo(
-        Target(Angle(AngleUtil.getAngle(next!!).yaw, 20f)),
-        300)
-//      RotationUtil.ease(RotationUtil.Rotation(AngleUtil.getAngles(next!!).yaw, 20f), 300)
+      autoRotation.easeTo(Target(Angle(AngleUtil.getAngle(next!!).yaw, 20f)), 300)
     }
 
     val movement = MovementHelper.closestKeysetsToBlock(next!!)
     KeyBindUtil.movement(movement[0], movement[1], movement[2], movement[3])
     gameSettings.keyBindSprint.setPressed(true)
-    gameSettings.keyBindJump.setPressed(shouldJump())
+    var jump = shouldJump()
+    if (shouldSneak) {
+      gameSettings.keyBindSneak.setPressed(true)
+      jump = player.getStandingOnFloor().y != next!!.y
+    }
+    gameSettings.keyBindJump.setPressed(jump)
   }
 
-  fun enable(path: List<BlockPos>) {
+  fun enable(path: List<BlockPos>, shouldSneak: Boolean = false) {
     disable()
     route = path.toMutableList()
     enabled = true
+    this.shouldSneak = shouldSneak
   }
 
   fun disable() {
@@ -71,10 +76,7 @@ class PathExec {
     return null
   }
 
-  private fun shouldJump() = player.onGround && (next!!.y + 0.5 - player.posY) >= 0.5 && (sqrt(
-    (player.posX - next!!.x).pow(
-      2.0
-    ) + (player.posZ - next!!.z).pow(2.0)
-  ) < 2)
+  private fun shouldJump() = player.onGround && (next!!.y + 0.5 - player.posY) >= 0.5
+      && (sqrt((player.posX - next!!.x).pow(2.0) + (player.posZ - next!!.z).pow(2.0)) < 2)
 
 }

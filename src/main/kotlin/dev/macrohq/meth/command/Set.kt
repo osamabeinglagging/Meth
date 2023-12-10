@@ -3,15 +3,14 @@ package dev.macrohq.meth.command
 import cc.polyfrost.oneconfig.utils.commands.annotations.Command
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main
 import cc.polyfrost.oneconfig.utils.commands.annotations.SubCommand
-import cc.polyfrost.oneconfig.utils.dsl.runAsync
-import dev.macrohq.meth.feature.helper.Angle
-import dev.macrohq.meth.feature.helper.Target
-import dev.macrohq.meth.feature.implementation.LockType
 import dev.macrohq.meth.feature.implementation.RouteBuilder
 import dev.macrohq.meth.util.*
 import dev.macrohq.meth.util.Logger.info
+import net.minecraft.block.BlockStairs
 import net.minecraft.entity.Entity
 import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import kotlin.math.abs
 
 
 @Command(value = "set", aliases = ["pft", "s"])
@@ -25,6 +24,12 @@ class Set {
 
   @Main
   private fun main() {
+    val state = world.getBlockState(start!!)
+    RenderUtil.filledBox.clear()
+    RenderUtil.markers.clear()
+    RenderUtil.markers.add(start!!)
+    RenderUtil.markers.add(player.getStandingOnCeil())
+    info("canWalk: ${BlockUtil.canWalkOn(player.getStandingOnCeil(), start!!)}")
   }
 
   @SubCommand
@@ -38,9 +43,10 @@ class Set {
 
   @SubCommand
   private fun log() {
-//    entities = world.loadedEntityList.toMutableList()
-//    log("Logged entities")
-    autoAotv.enable(RouteBuilder.route)
+    val route = RouteBuilder.route
+    RenderUtil.markers.clear()
+    route.forEach { RenderUtil.markers.add(it.block) }
+    autoAotv.enable(route, true)
   }
 
   @SubCommand

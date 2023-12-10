@@ -35,6 +35,12 @@ class AutoAotv : AbstractFeature() {
   }
 
   fun enable(route: List<RouteNode>, forceEnable: Boolean = false) {
+    if(route.isEmpty()){
+      log("Not enabling aotv due to route being empty.")
+      this.setSucceeded(false)
+      return
+    }
+
     this.enabled = true
     this.failed = false
     this.nextNode = null
@@ -63,9 +69,11 @@ class AutoAotv : AbstractFeature() {
     log("Disabling Auto Aotv Macro")
   }
 
-  private fun getRotationTime(node: RouteNode): Int {
+  private fun getRotationTime(node: RouteNode, nodeIndex: Int): Int {
     var time = config.autoAotvFlyLookTime
-    val previousNode = this.route[max(this.currentNodeIndex - 1, 0)]
+    val previousNode = this.route[max(nodeIndex - 1, 0)]
+    log("NextTransport: ${node.transportMethod}")
+    log("prevnodetransport: ${previousNode.transportMethod}")
     if (node.transportMethod == TransportMethod.ETHERWARP && previousNode.transportMethod == TransportMethod.ETHERWARP) {
       time = config.autoAotvEtherwarpLookTime
     }
@@ -94,6 +102,7 @@ class AutoAotv : AbstractFeature() {
       State.FINDING_NEXT_BLOCK -> {
         if (this.currentNodeIndex == this.route.size) {
           this.state = State.END_VERIFY
+          this.timer = Timer(250)
           return
         }
 
@@ -101,7 +110,7 @@ class AutoAotv : AbstractFeature() {
         this.nextNode = this.route[currentNodeIndex]
         this.currentNodeIndex++
 
-        if (this.nextNode!!.transportMethod == TransportMethod.WALK) {
+        if (this.nextNode!!.transportMethod == TransportMethod.WALK || this.nextNode!!.transportMethod == TransportMethod.SNEAK_WALK) {
           this.state = State.WALK
         }
 
@@ -110,8 +119,8 @@ class AutoAotv : AbstractFeature() {
 
       State.LOOKING_AT_NEXT_BLOCK -> {
         this.state = State.LOOK_VERIFY
-        val time = this.getRotationTime(this.nextNode!!)
-        autoRotation.easeTo(Target(this.nextNode!!.block), time, lockType = LockType.INSTANT)
+        val time = this.getRotationTime(this.nextNode!!, this.currentNodeIndex-1)
+        autoRotation.easeTo(Target(this.nextNode!!.block), time, lockType = LockType.SMOOTH)
 
         log("Looking at Next Block. Time: $time")
       }
@@ -133,7 +142,7 @@ class AutoAotv : AbstractFeature() {
             this.timer = Timer(config.autoAotvEtherwarpSneakTime)
           }
 
-          TransportMethod.WALK -> {
+          TransportMethod.WALK, TransportMethod.SNEAK_WALK -> {
             this.state = State.WALK
           }
         }
@@ -183,7 +192,7 @@ class AutoAotv : AbstractFeature() {
       State.WALK -> {
         if (!(player.onGround && timer.isDone)) return
 
-        PathingUtil.goto(this.nextNode!!.block)
+        PathingUtil.goto(this.nextNode!!.block, this.nextNode!!.transportMethod == TransportMethod.SNEAK_WALK)
         this.state = State.WALK_VERIFY
         this.timer = Timer(config.autoAotvWalkTimeLimit)
 

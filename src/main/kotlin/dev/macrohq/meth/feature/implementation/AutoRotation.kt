@@ -55,7 +55,7 @@ class AutoRotation: AbstractFeature() {
   private fun interpolate(startAngle: Angle, endAngle: Angle) {
     val timeProgress = (System.currentTimeMillis() - this.startTime).toFloat() / (this.endTime - this.startTime)
     val totalNeededAngleProgress = this.easeFunction!!(timeProgress)
-    val totalChange = AngleUtil.calculateNeededAngleChange(this.startAngle!!, this.target!!.getAngle())
+    val totalChange = AngleUtil.calculateNeededAngleChange(this.startAngle!!, endAngle)
 
     val currentYawProgress: Float = (player.rotationYaw - startAngle.yaw) / totalChange.yaw
     val currentPitchProgress: Float = (player.rotationPitch - startAngle.pitch) / totalChange.pitch

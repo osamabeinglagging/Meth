@@ -9,7 +9,7 @@ object PathingUtil {
   var hasFailed = false
     private set
 
-  fun goto(pos: BlockPos, forceEnable: Boolean = false) {
+  fun goto(pos: BlockPos, sneak: Boolean = false, forceEnable: Boolean = false) {
     hasFailed = false
     runAsync {
       val path = AStarPathfinder(player.getStandingOnCeil(), pos).findPath(1000)
@@ -17,7 +17,7 @@ object PathingUtil {
         hasFailed = true
         Logger.log("Could not find path!!")
       } else {
-        pathExec.enable(path)
+        pathExec.enable(path, sneak)
       }
     }
   }
