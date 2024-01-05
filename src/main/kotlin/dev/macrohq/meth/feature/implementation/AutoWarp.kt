@@ -29,7 +29,9 @@ class AutoWarp : AbstractFeature() {
   }
 
   fun enable(
-    island: LocationTracker.Island? = null, subLocation: LocationTracker.SubLocation? = null, forceEnable: Boolean = false
+    island: LocationTracker.Island? = null,
+    subLocation: LocationTracker.SubLocation? = null,
+    forceEnable: Boolean = false
   ) {
     this.failed = false
     this.enabled = true
@@ -133,8 +135,12 @@ class AutoWarp : AbstractFeature() {
     val sendingCommandsTooFast = "You are sending commands too fast! Please slow down."
     val notOnSkyBlock = "Oops! You are not on SkyBlock so we couldn't warp you!"
     val noWarpScroll = "You haven't unlocked this fast travel destination!"
+    val kickedWhileJoining = "You were kicked while joining that server!"
+    val rejoinedTooFast = "You tried to rejoin too fast, please try again in a moment."
 
-    if (message.contains(cannotJoinSB) || message.contains(couldntWarp) || message.contains(sendingCommandsTooFast)) {
+    if (message.contains(cannotJoinSB) || message.contains(couldntWarp) || message.contains(sendingCommandsTooFast)
+      || message.contains(kickedWhileJoining) || message.contains(rejoinedTooFast)
+    ) {
       this.timer = Timer(config.autoWarpErrorWaitTime)
     }
     if (message.contains(notOnSkyBlock)) {

@@ -127,36 +127,15 @@ object BlockUtil {
   }
 
   fun blocksBetweenValid(startPoss: BlockPos, endPoss: BlockPos): Boolean {
-    var startPos = startPoss
-    var endPos = endPoss
-    if (startPos.x > endPos.x) {
-      startPos = endPoss
-      endPos = startPoss
-    }
-    val blocks =
-      bresenham(startPos.toVec3().addVector(0.0, 0.4, 0.0), endPos.toVec3().addVector(0.0, 0.4, 0.0)).toMutableList()
-    var blockFail = 0
-    var lastBlockY = blocks[0].y
-    var lastFullBlock = world.isBlockFullCube(blocks[0])
-    var isLastBlockSlab = isStairSlab(blocks[0])
-    var isLastBlockAir = world.isAirBlock(blocks[0])
-    blocks.remove(blocks[0])
-    blocks.forEach {
+    val blocksBetween = bresenham(startPoss.toVec3(), endPoss.toVec3())
+    for (i in blocksBetween.indices) {
+      val it = blocksBetween[i]
       if (!AStarPathfinder.Node(it, null).isWalkable() && !world.isAirBlock(it)) {
         return false
       }
-//            if(!(isLastBlockSlab && world.isBlockFullCube(it))) return false
-      if (isLastBlockAir && world.isBlockFullCube(it) && !isStairSlab(it)) return false
-//            if(!(isLastBlockAir && isStairSlab(it))) return false
-      if (lastFullBlock && world.isBlockFullCube(it) && it.y > lastBlockY) return false
-      if (world.isAirBlock(it)) blockFail++
-      else blockFail = 0
-      if (blockFail > 3) return false
-
-      lastBlockY = it.y
-      lastFullBlock = world.isBlockFullCube(it)
-      isLastBlockSlab = isStairSlab(it)
-      isLastBlockAir = world.isAirBlock(it)
+      if (i == 0) continue
+      val prev = blocksBetween[i - 1]
+      if (!canWalkOn(prev, it)) return false
     }
     return true
   }
@@ -166,23 +145,18 @@ object BlockUtil {
       0 -> {
         EnumFacing.EAST
       }
-
       1 -> {
         EnumFacing.WEST
       }
-
       2 -> {
         EnumFacing.SOUTH
       }
-
       3 -> {
         EnumFacing.NORTH
       }
-
       4 -> {
         EnumFacing.DOWN
       }
-
       else -> EnumFacing.UP
     }
   }
@@ -287,6 +261,7 @@ object BlockUtil {
       y0 = MathHelper.floor_double(start0.yCoord) - if (enumfacing == EnumFacing.UP) 1 else 0
       z0 = MathHelper.floor_double(start0.zCoord) - if (enumfacing == EnumFacing.SOUTH) 1 else 0
       val pos = BlockPos(x0, y0, z0)
+//      blocks.add(pos)
       if (world.isAirBlock(pos)) {
         val down = pos.down()
         val down2 = pos.add(0, -2, 0)

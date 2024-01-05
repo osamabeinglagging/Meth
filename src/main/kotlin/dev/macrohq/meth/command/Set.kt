@@ -3,7 +3,10 @@ package dev.macrohq.meth.command
 import cc.polyfrost.oneconfig.utils.commands.annotations.Command
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main
 import cc.polyfrost.oneconfig.utils.commands.annotations.SubCommand
+import cc.polyfrost.oneconfig.utils.dsl.runAsync
 import dev.macrohq.meth.feature.implementation.RouteBuilder
+import dev.macrohq.meth.pathfinding.AStarPathfinder
+import dev.macrohq.meth.pathfinding.npf.AStarPathFinderJavaScript
 import dev.macrohq.meth.util.*
 import dev.macrohq.meth.util.Logger.info
 import net.minecraft.block.BlockStairs
@@ -24,12 +27,10 @@ class Set {
 
   @Main
   private fun main() {
-    val state = world.getBlockState(start!!)
-    RenderUtil.filledBox.clear()
-    RenderUtil.markers.clear()
-    RenderUtil.markers.add(start!!)
-    RenderUtil.markers.add(player.getStandingOnCeil())
-    info("canWalk: ${BlockUtil.canWalkOn(player.getStandingOnCeil(), start!!)}")
+    runAsync {
+      val ap = AStarPathFinderJavaScript(start!!, end!!)
+      Logger.info("Pathsize: " + ap.findPath(2000).size)
+    }
   }
 
   @SubCommand
@@ -72,13 +73,18 @@ class Set {
 
   @SubCommand
   private fun end() {
-    var str = ""
-    str += "\tval LAVA = listOf(\n"
-    for (block in RouteBuilder.route) {
-      str += "\t\tRouteNode(BlockPos(${block.block.x}, ${block.block.y}, ${block.block.z}), TransportMethod.${block.transportMethod}),\n"
+    if (end != null) {
+      RenderUtil.filledBox.remove(end!!)
     }
-    str += "\t)"
-    println(str)
+    end = player.getStandingOnFloor()
+    RenderUtil.filledBox.add(end!!)
+//    var str = ""
+//    str += "\tval LAVA = listOf(\n"
+//    for (block in RouteBuilder.route) {
+//      str += "\t\tRouteNode(BlockPos(${block.block.x}, ${block.block.y}, ${block.block.z}), TransportMethod.${block.transportMethod}),\n"
+//    }
+//    str += "\t)"
+//    println(str)
   }
 
   @SubCommand
