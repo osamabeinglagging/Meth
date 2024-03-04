@@ -26,8 +26,8 @@ dependencies {
 
     // compileOnly("cc.polyfrost:oneconfig-1.8.9-forge:0.2.0-alpha+")
     compileOnly("cc.polyfrost:oneconfig-1.8.9-forge:0.2.2-alpha+")
-    include("cc.polyfrost:oneconfig-wrapper-launchwrapper:1.0.0-beta+")
-    // embed("cc.polyfrost:oneconfig-wrapper-launchwrapper:1.0.0-beta+")
+    // include("cc.polyfrost:oneconfig-wrapper-launchwrapper:1.0.0-beta+")
+    embed("cc.polyfrost:oneconfig-wrapper-launchwrapper:1.0.0-beta+")
 
     compileOnly("org.spongepowered:mixin:0.8.5-SNAPSHOT")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
