@@ -4,7 +4,10 @@ import cc.polyfrost.oneconfig.utils.commands.annotations.Command
 import cc.polyfrost.oneconfig.utils.commands.annotations.Main
 import cc.polyfrost.oneconfig.utils.commands.annotations.SubCommand
 import cc.polyfrost.oneconfig.utils.dsl.runAsync
+import dev.macrohq.meth.feature.helper.RouteNode
+import dev.macrohq.meth.feature.helper.TransportMethod
 import dev.macrohq.meth.feature.implementation.RouteBuilder
+import dev.macrohq.meth.feature.implementation.RouteData
 import dev.macrohq.meth.pathfinding.AStarPathfinder
 import dev.macrohq.meth.pathfinding.npf.AStarPathFinderJavaScript
 import dev.macrohq.meth.util.*
@@ -18,108 +21,106 @@ import kotlin.math.abs
 
 @Command(value = "set", aliases = ["pft", "s"])
 class Set {
-  private var start: BlockPos? = null
-  private var end: BlockPos? = null
-  private var ll = mutableListOf<BlockPos>()
-  private var entities = mutableListOf<Entity>()
-  var count = 0
-  val blocks = mutableListOf<BlockPos>()
+    private var start: BlockPos? = null
+    private var end: BlockPos? = null
+    private var ll = mutableListOf<BlockPos>()
+    private var entities = mutableListOf<Entity>()
+    var count = 0
+    val blocks = mutableListOf<BlockPos>()
 
-  @Main
-  private fun main() {
-    runAsync {
-      val ap = AStarPathFinderJavaScript(start!!, end!!)
-      Logger.info("Pathsize: " + ap.findPath(2000).size)
+    @Main
+    private fun main() {
+        PathingUtil.goto(end!!)
     }
-  }
 
-  @SubCommand
-  private fun start() {
-    if (start != null) {
-      RenderUtil.filledBox.remove(start!!)
+    @SubCommand
+    private fun start() {
+        if (start != null) {
+            RenderUtil.filledBox.remove(start!!)
+        }
+        start = player.getStandingOnFloor()
+        RenderUtil.filledBox.add(start!!)
     }
-    start = player.getStandingOnFloor()
-    RenderUtil.filledBox.add(start!!)
-  }
 
-  @SubCommand
-  private fun log() {
-    val route = RouteBuilder.route
-    RenderUtil.markers.clear()
-    route.forEach { RenderUtil.markers.add(it.block) }
-    autoAotv.enable(route, true)
-  }
+    @SubCommand
+    private fun log() {
+//    val route = RouteData.UPPER_ETHERWARP
+        val route = RouteBuilder.route
+        RenderUtil.markers.clear()
+        route.forEach { RenderUtil.markers.add(it.block) }
+        autoAotv.enable(route, true)
+    }
 
-  @SubCommand
-  private fun record() {
-    movementLogger.enable(5000)
-  }
+    @SubCommand
+    private fun record() {
+        movementLogger.enable(5000)
+    }
 
-  @SubCommand
-  private fun stop() {
-    movementLogger.disable()
-  }
+    @SubCommand
+    private fun stop() {
+        movementLogger.disable()
+    }
 
-  @SubCommand
-  private fun replay() {
+    @SubCommand
+    private fun replay() {
 //    movementLogger.replay(movementLogger.moveme5000)
-  }
-
-  @SubCommand
-  private fun clearmove() {
-    info("Clearing")
-    movementLogger.clear()
-  }
-
-  @SubCommand
-  private fun end() {
-    if (end != null) {
-      RenderUtil.filledBox.remove(end!!)
     }
-    end = player.getStandingOnFloor()
-    RenderUtil.filledBox.add(end!!)
-//    var str = ""
-//    str += "\tval LAVA = listOf(\n"
-//    for (block in RouteBuilder.route) {
-//      str += "\t\tRouteNode(BlockPos(${block.block.x}, ${block.block.y}, ${block.block.z}), TransportMethod.${block.transportMethod}),\n"
+
+    @SubCommand
+    private fun clearmove() {
+        info("Clearing")
+        movementLogger.clear()
+    }
+
+    @SubCommand
+    private fun end() {
+//    if (end != null) {
+//      RenderUtil.filledBox.remove(end!!)
 //    }
-//    str += "\t)"
-//    println(str)
-  }
-
-  @SubCommand
-  private fun route() {
-    if (RouteBuilder.enabled) {
-      RouteBuilder.disable()
-    } else {
-      RouteBuilder.enable()
+//    end = player.getStandingOnFloor()
+//    RenderUtil.filledBox.add(end!!)
+        var str = ""
+        str += "\tval LAVA = listOf(\n"
+        for (block in RouteBuilder.route) {
+            str += "\t\tRouteNode(BlockPos(${block.block.x}, ${block.block.y}, ${block.block.z}), TransportMethod.${block.transportMethod}),\n"
+        }
+        str += "\t)"
+        println(str)
     }
-  }
 
-  @SubCommand
-  private fun clear() {
-    worldScanner.clear()
-    movementLogger.disable()
-    PathingUtil.stop()
-    autoAotv.disable()
-    failsafe.resetFailsafe()
-    autoInventory.disable()
-    macroHandler.disable()
-    RenderUtil.lines.clear()
-    commissionMacro.disable()
-    meth.oTree = null
-    RenderUtil.aabbs.clear()
-    RenderUtil.points.clear()
-    pathExec.disable()
-    RenderUtil.entites.clear()
-    mobKiller.disable()
-    randomMovement.disable()
-    autoCommission.disable()
-    RenderUtil.filledBox.clear()
-    RenderUtil.markers.clear()
-    RouteBuilder.route.clear()
-    mithrilMiner.disable()
-    RouteBuilder.route.clear()
-    autoRotation.disable()
-  }
+    @SubCommand
+    private fun route() {
+        if (RouteBuilder.enabled) {
+            RouteBuilder.disable()
+        } else {
+            RouteBuilder.enable()
+        }
+    }
+
+    @SubCommand
+    private fun clear() {
+        worldScanner.clear()
+        movementLogger.disable()
+        PathingUtil.stop()
+        autoAotv.disable()
+        failsafe.resetFailsafe()
+        autoInventory.disable()
+        macroHandler.disable()
+        RenderUtil.lines.clear()
+        commissionMacro.disable()
+        meth.oTree = null
+        RenderUtil.aabbs.clear()
+        RenderUtil.points.clear()
+        pathExec.disable()
+        RenderUtil.entites.clear()
+        mobKiller.disable()
+        randomMovement.disable()
+        autoCommission.disable()
+        RenderUtil.filledBox.clear()
+        RenderUtil.markers.clear()
+        RouteBuilder.route.clear()
+        mithrilMiner.disable()
+        RouteBuilder.route.clear()
+        autoRotation.disable()
+    }
 }

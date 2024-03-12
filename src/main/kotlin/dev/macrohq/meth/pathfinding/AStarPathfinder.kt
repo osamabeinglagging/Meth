@@ -26,8 +26,8 @@ class AStarPathfinder(startPos: BlockPos, endPos: BlockPos) {
     openNodes.add(startNode)
     for (i in 0 until iterations) {
       val currentNode =
-        openNodes.stream().min(Comparator.comparingDouble { it.getFCost().toDouble() }).orElse(null)
-          ?: return listOf()
+              openNodes.stream().min(Comparator.comparingDouble { it.getFCost().toDouble() }).orElse(null)
+                      ?: return listOf()
       if (currentNode.position == endNode.position) return reconstructPath(currentNode)
       openNodes.remove(currentNode)
       closedNodes.add(currentNode)
@@ -54,13 +54,10 @@ class AStarPathfinder(startPos: BlockPos, endPos: BlockPos) {
     if (path.isNotEmpty()) {
       smooth.add(path[0])
       var currPoint = 0
-      var maxiters = 2000
-
-      while (currPoint + 1 < path.size && maxiters-- > 0) {
+      while (currPoint + 1 < path.size) {
         var nextPos = currPoint + 1
-
-        for (i in (path.size - 1) downTo nextPos) {
-          if (BlockUtil.blocksBetweenValid(path[currPoint], path[i])) {
+        for (i in path.size - 1 downTo currPoint + 1) {
+          if (BlockUtil.canWalkOn(path[currPoint], path[i])) {
             nextPos = i
             break
           }
@@ -69,6 +66,24 @@ class AStarPathfinder(startPos: BlockPos, endPos: BlockPos) {
         currPoint = nextPos
       }
     }
+//    if (path.isNotEmpty()) {
+//      smooth.add(path[0])
+//      var currPoint = 0
+//      var maxiters = 2000
+//
+//      while (currPoint + 1 < path.size && maxiters-- > 0) {
+//        var nextPos = currPoint + 1
+//
+//        for (i in (path.size - 1) downTo nextPos) {
+//          if (BlockUtil.canWalkOn(path[currPoint], path[i])) {
+//            nextPos = i
+//            break
+//          }
+//        }
+//        smooth.add(path[nextPos])
+//        currPoint = nextPos
+//      }
+//    }
     return smooth
   }
 
@@ -92,7 +107,7 @@ class AStarPathfinder(startPos: BlockPos, endPos: BlockPos) {
         else AngleUtil.yawTo360(abs(this.yaw - this.parent.yaw)) / 360
 
         if (this.parent.position.y < this.position.y
-          && !BlockUtil.isStairSlab(this.position)
+                && !BlockUtil.isStairSlab(this.position)
         ) {
           cost += 1.5f
         }
@@ -125,25 +140,25 @@ class AStarPathfinder(startPos: BlockPos, endPos: BlockPos) {
       val posState = world.getBlockState(this.position)
       val posUp = this.position.up()
       val pos2Up = this.position.add(0, 2, 0)
-      if (!posState.block.material.isSolid){
+      if (!posState.block.material.isSolid) {
         return false
       }
 
       if (this.parent != null) {
         if (this.parent.position.y < this.position.y) {
-          isHeadHitBlockSolid = world.getBlockState(this.parent.position.add(0,3,0)).block.material.isSolid
+          isHeadHitBlockSolid = world.getBlockState(this.parent.position.add(0, 3, 0)).block.material.isSolid
         }
         if (parent.position.x != position.x && parent.position.z != position.z && position.y >= parent.position.y) {
           isBlockInPath = !(world.isAirBlock(position.add(1, 1, 0))
-              && world.isAirBlock(position.add(-1, 1, 0))
-              && world.isAirBlock(position.add(0, 1, 1))
-              && world.isAirBlock(position.add(0, 1, -1)))
+                  && world.isAirBlock(position.add(-1, 1, 0))
+                  && world.isAirBlock(position.add(0, 1, 1))
+                  && world.isAirBlock(position.add(0, 1, -1)))
         }
       }
       return !world.getBlockState(posUp).block.material.isSolid
-          && !world.getBlockState(pos2Up).block.material.isSolid
-          && !isBlockInPath
-          && !isHeadHitBlockSolid
+              && !world.getBlockState(pos2Up).block.material.isSolid
+              && !isBlockInPath
+              && !isHeadHitBlockSolid
     }
 
     fun isIn(nodes: List<Node>): Boolean {
@@ -151,32 +166,32 @@ class AStarPathfinder(startPos: BlockPos, endPos: BlockPos) {
     }
 
     private val allowedBlocks = listOf(
-      Blocks.air,
-      Blocks.tallgrass,
-      Blocks.double_plant,
-      Blocks.yellow_flower,
-      Blocks.red_flower,
-      Blocks.vine,
-      Blocks.redstone_wire,
-      Blocks.snow_layer,
-      Blocks.cocoa,
-      Blocks.end_portal,
-      Blocks.tripwire,
-      Blocks.web,
-      Blocks.flower_pot,
-      Blocks.wooden_pressure_plate,
-      Blocks.stone_pressure_plate,
-      Blocks.redstone_torch,
-      Blocks.lever,
-      Blocks.stone_button,
-      Blocks.wooden_button,
-      Blocks.carpet,
-      Blocks.standing_sign,
-      Blocks.wall_sign,
-      Blocks.rail,
-      Blocks.detector_rail,
-      Blocks.activator_rail,
-      Blocks.golden_rail,
+            Blocks.air,
+            Blocks.tallgrass,
+            Blocks.double_plant,
+            Blocks.yellow_flower,
+            Blocks.red_flower,
+            Blocks.vine,
+            Blocks.redstone_wire,
+            Blocks.snow_layer,
+            Blocks.cocoa,
+            Blocks.end_portal,
+            Blocks.tripwire,
+            Blocks.web,
+            Blocks.flower_pot,
+            Blocks.wooden_pressure_plate,
+            Blocks.stone_pressure_plate,
+            Blocks.redstone_torch,
+            Blocks.lever,
+            Blocks.stone_button,
+            Blocks.wooden_button,
+            Blocks.carpet,
+            Blocks.standing_sign,
+            Blocks.wall_sign,
+            Blocks.rail,
+            Blocks.detector_rail,
+            Blocks.activator_rail,
+            Blocks.golden_rail,
     )
   }
 }

@@ -35,7 +35,7 @@ class AutoAotv : AbstractFeature() {
   }
 
   fun enable(route: List<RouteNode>, forceEnable: Boolean = false) {
-    if(route.isEmpty()){
+    if (route.isEmpty()) {
       log("Not enabling aotv due to route being empty.")
       this.setSucceeded(false)
       return
@@ -119,7 +119,7 @@ class AutoAotv : AbstractFeature() {
 
       State.LOOKING_AT_NEXT_BLOCK -> {
         this.state = State.LOOK_VERIFY
-        val time = this.getRotationTime(this.nextNode!!, this.currentNodeIndex-1)
+        val time = this.getRotationTime(this.nextNode!!, this.currentNodeIndex - 1)
         autoRotation.easeTo(Target(this.nextNode!!.block), time, lockType = LockType.SMOOTH)
 
         log("Looking at Next Block. Time: $time")
@@ -173,7 +173,7 @@ class AutoAotv : AbstractFeature() {
         val isPlayerStandingOnNextNode = player.getStandingOnFloor() == this.nextNode!!.block
         val playerDistanceToNextBlock = player.distanceToBlock(nextNode!!.block)
         val shouldCrashIntoNextBlock = !world.isAirBlock(this.nextNode!!.block)
-            && this.nextNode!!.transportMethod == TransportMethod.FLY && player.distanceToBlock(this.nextNode!!.block) > 2
+                && this.nextNode!!.transportMethod == TransportMethod.FLY && player.distanceToBlock(this.nextNode!!.block) > 2
 
         if (playerDistanceTraveledFromLastTick < 4 && !isPlayerStandingOnNextNode && playerDistanceToNextBlock > 3) return
 

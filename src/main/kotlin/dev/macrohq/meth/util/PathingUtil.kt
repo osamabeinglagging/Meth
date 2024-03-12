@@ -10,16 +10,16 @@ object PathingUtil {
     private set
 
   fun goto(pos: BlockPos, sneak: Boolean = false, forceEnable: Boolean = false) {
-    println("GOGOTOOT")
+//    println("GOGOTOOT")
     hasFailed = false
     runAsync {
-      println("GENENNENE")
+//      println("GENENNENE")
       val path = AStarPathfinder(player.getStandingOnCeil(), pos).findPath(1000)
       if (path.isEmpty()) {
         hasFailed = true
         Logger.log("Could not find path!!")
       } else {
-//        pathExec.enable(path, sneak)
+        pathExec.enable(path, sneak)
       }
     }
   }
